@@ -511,8 +511,8 @@
     ground = new THREE.Mesh(new THREE.PlaneGeometry(70000, 70000), new THREE.MeshStandardMaterial({ map: gtex, roughness: 1, metalness: 0 }));
     ground.rotation.x = -PI / 2; ground.position.set(5000, 0, -4000); ground.receiveShadow = true; STATIC.add(ground);
     // шаҳар ҳудуди (кулранг асфальт қатлами)
-    var city = new THREE.Mesh(new THREE.CircleGeometry(3600, 48), new THREE.MeshStandardMaterial({ color: col(0x7b7d78), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
-    city.rotation.x = -PI / 2; city.position.set(9300, 0.02, -7600); city.receiveShadow = true; STATIC.add(city); G.city = city;
+    var city = new THREE.Mesh(new THREE.CircleGeometry(3600 * BA.WC * 1.05, 48), new THREE.MeshStandardMaterial({ color: col(0x7b7d78), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+    city.rotation.x = -PI / 2; var CW = BA.warp(9300, -7600); city.position.set(CW.x, 0.02, CW.z); city.receiveShadow = true; STATIC.add(city); G.city = city;
 
     // йўллар
     var t8 = roadTex(34, 4, 2), t4 = roadTex(18, 2, 2), t2 = roadTex(12, 1, 0), tg = roadTex(7, 1, 0);
@@ -665,6 +665,7 @@
     var can = new THREE.Mesh(new THREE.BoxGeometry(26, 0.8, 14), new THREE.MeshStandardMaterial({ color: col(0x1d5fa8), metalness: 0.5 })); can.position.set(L.x + 40, 6.5, L.z - 40); grp.add(can);
   }
   /* ----- Ёқилғи шохобчалари ----- */
+  var FUEL_PTS = [];
   function buildFuel() {
     var L = BA.byId('loc_fuel'), grp = new THREE.Group(); SITE.loc_fuel = grp; STATIC.add(grp);
     var canopyM = new THREE.MeshStandardMaterial({ color: col(0xf2f2f2), roughness: 0.5, emissive: col(0xffffff), emissiveIntensity: 0.08 });
@@ -672,18 +673,33 @@
     var cars = new IG(GEO.car, MAT.veh, 420, false); DYN.add(cars.m); G.fuelCars = cars;
     var cc = [0xf2f2f2, 0x1b1b1b, 0x9aa3ad, 0x8b1e1e, 0x1f4f8a, 0xc9c1a8, 0x2e5e3a].map(col);
     var sa = nearestS('airport', L.x, L.z), sb = nearestS('bypass', L.x, L.z);
-    var spots = [['airport', sa - 700, 32], ['airport', sa - 380, -32], ['airport', sa - 60, 32], ['airport', sa + 260, -32], ['airport', sa + 580, 32], ['airport', sa + 900, -32]];  void sb;
+    var spots = [['airport', sa - 230, 34], ['airport', sa - 150, -34], ['airport', sa - 40, 34], ['airport', sa + 60, -34], ['airport', sa + 170, 34], ['airport', sa + 260, -34]];  void sb;
     spots.forEach(function (sp) {
       var p = at(sp[0], sp[1], sp[2]), st = new THREE.Group(); st.position.set(p.x, 0, p.z); st.rotation.y = p.yaw; grp.add(st);
       var pad = new THREE.Mesh(new THREE.PlaneGeometry(60, 36), new THREE.MeshStandardMaterial({ color: col(0x9c9e9a), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })); pad.rotation.x = -PI / 2; pad.position.y = 0.05; pad.receiveShadow = true; st.add(pad);
       var can = new THREE.Mesh(new THREE.BoxGeometry(30, 1.2, 16), canopyM); can.position.y = 6.2; can.castShadow = true; st.add(can);
       var str = new THREE.Mesh(new THREE.BoxGeometry(30.2, 0.5, 16.2), stripeM); str.position.y = 6.0; st.add(str);
       [[-12, -6], [-12, 6], [12, -6], [12, 6]].forEach(function (c) { var pi = new THREE.Mesh(cyl(0.3, 0.3, 6, 8), canopyM); pi.position.set(c[0], 3, c[1]); st.add(pi); });
-      for (var k = 0; k < 4; k++) { var pu = new THREE.Mesh(new THREE.BoxGeometry(1, 1.8, 0.7), new THREE.MeshStandardMaterial({ color: col(0x2c7a4a) })); pu.position.set(-9 + k * 6, 0.9, 0); st.add(pu); }
+      FUEL_PTS.push({ x: p.x, z: p.z, yaw: p.yaw, side: sp[2] > 0 ? 1 : -1 });
+      // kirish/chiqish yo'laklari (asfalt) — shoxobchani yo'lga ulaydi
+      var dwM = new THREE.MeshStandardMaterial({ color: col(0x4a4c50), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+      [-22, 22].forEach(function (dx) { var dw = new THREE.Mesh(new THREE.PlaneGeometry(9, 26), dwM); dw.rotation.x = -PI / 2; dw.position.set(dx, 0.04, Math.sign(sp[2]) * 26); st.add(dw); });
+      // 2 ta orolcha, har birida 2 kolonka + ostida mashinalar
+      var puM = new THREE.MeshStandardMaterial({ color: col(0x2c7a4a) }), isM = new THREE.MeshStandardMaterial({ color: col(0xd8d8d0) });
+      [-4, 4].forEach(function (iz) {
+        var isl = new THREE.Mesh(new THREE.BoxGeometry(22, 0.3, 1.6), isM); isl.position.set(0, 0.15, iz); st.add(isl);
+        [-6, 6].forEach(function (ix) { var pu = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.9, 0.8), puM); pu.position.set(ix, 1.1, iz); st.add(pu); });
+        [-6, 6].forEach(function (ix) { var lx = ix, lz = iz + (iz > 0 ? 2.2 : -2.2), cy = Math.cos(p.yaw), sy = Math.sin(p.yaw); cars.add(p.x + lx * cy + lz * sy, 0, p.z - lx * sy + lz * cy, p.yaw, 1, cc[Math.floor(rnd() * cc.length)]); });
+      });
+      // narx ustuni (pilon)
+      var py = new THREE.Mesh(new THREE.BoxGeometry(1.6, 9, 0.6), new THREE.MeshStandardMaterial({ color: col(0x1f7a3a) })); py.position.set(-20, 4.5, -15); py.castShadow = true; st.add(py);
+      var pyb = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.4, 0.7), new THREE.MeshStandardMaterial({ color: col(0x111111), emissive: col(0xff3b30), emissiveIntensity: 0.6 })); pyb.position.set(-20, 6.5, -15); st.add(pyb);
+      // kirish shlagbaumi
+      var bar = new THREE.Mesh(new THREE.BoxGeometry(8, 0.25, 0.25), new THREE.MeshStandardMaterial({ color: col(0xd62d2d), emissive: col(0x5a0000) })); bar.position.set(-26, 1.1, -10); st.add(bar);
       var shop = new THREE.Mesh(new THREE.BoxGeometry(14, 4.5, 9), new THREE.MeshStandardMaterial({ color: col(0xe0ddd2) })); shop.position.set(0, 2.25, 14); shop.castShadow = true; st.add(shop);
       var sg = glow(col(0xff3b30), 6, 0.9); sg.position.set(14, 8, 0); st.add(sg);  // «ЁҚИЛҒИ ЙЎҚ» сигнали
       // километрлик навбат
-      for (var q = 0; q < 60; q++) { var cp = at(sp[0], sp[1] - 40 - q * 6.2, sp[2] > 0 ? 6.5 : -6.5); cars.add(cp.x, 0, cp.z, cp.yaw, 1, cc[Math.floor(rnd() * cc.length)]); }
+      for (var q = 0; q < 16; q++) { var cp = at(sp[0], sp[1] - 40 - q * 6.2, sp[2] > 0 ? 7.5 : -7.5); cars.add(cp.x, 0, cp.z, cp.yaw, 1, cc[Math.floor(rnd() * cc.length)]); }
     });
     cars.update();
   }
@@ -732,9 +748,9 @@
     var bc = [0xe8e2d4, 0xd6d9dd, 0xc9bfae, 0xf0ece2, 0xb8c0c8, 0xd9cbb5].map(col);
     var tries = 0;
     while (bld.n < 1650 && tries++ < 20000) {
-      var a = rnd() * PI * 2, r = Math.sqrt(rnd()) * 3500, x = 9300 + Math.cos(a) * r, z = -7600 + Math.sin(a) * r;
-      if (Math.hypot(x - 9920, z + 8888) < 170) continue;
-      if (x > 9300 && z < -3300 && z > -4900) continue; // аэропорт
+      var a = rnd() * PI * 2, r = Math.sqrt(rnd()) * 3500, x0 = 9300 + Math.cos(a) * r, z0 = -7600 + Math.sin(a) * r, wp = BA.warp(x0, z0), x = wp.x, z = wp.z;
+      if (Math.hypot(x0 - 9920, z0 + 8888) < 170) continue;
+      if (x0 > 9300 && z0 < -3300 && z0 > -4900) continue; // аэропорт
       if (distRoad('m39', x, z) < 45 || distRoad('airport', x, z) < 40 || distRoad('bypass', x, z) < 40) continue;
       var w = R(18, 46), d = R(14, 40), h = rnd() < 0.15 ? R(45, 90) : R(10, 34);
       var i = bld.add(x, 0, z, R(-0.2, 0.2) + 0.5, 1, bc[Math.floor(rnd() * bc.length)]);
@@ -758,14 +774,16 @@
     ['m39', 'bypass', 'airport'].forEach(function (k) {
       var rr = RD[k];
       for (var s = 0; s < rr.L; s += 14) {
-        [1, -1].forEach(function (side) { if (rnd() < 0.35) return; var p = at(k, s, side * R(30, 48)); if (Math.hypot(p.x - 2150, p.z + 800) < 400) return; tr.add(p.x, 0, p.z, R(0, PI), R(0.7, 1.3)); });
+        [1, -1].forEach(function (side) { if (rnd() < 0.35) return; var p = at(k, s, side * R(30, 48)); if (Math.hypot(p.x - 2150, p.z + 800) < 400) return; if (FUEL_PTS.some(function (f) { return Math.hypot(f.x - p.x, f.z - p.z) < 55; })) return; tr.add(p.x, 0, p.z, R(0, PI), R(0.7, 1.3)); });
       }
     });
     tries = 0;
     while (tr.n < 3350 && tries++ < 20000) {
-      var tx = R(-3000, 13000), tz = R(-11000, 1600);
+      var tx0 = R(-3000, 13000), tz0 = R(-11000, 1600), tw = BA.warp(tx0, tz0), tx = tw.x, tz = tw.z;
+      if (tx0 > 9300 && tz0 < -3300 && tz0 > -4900) continue;
       if (distRoad('m39', tx, tz) < 40 || distRoad('airport', tx, tz) < 30 || distRoad('bypass', tx, tz) < 30) continue;
       if (tx > 9300 && tz < -3300 && tz > -4900) continue;
+      if (FUEL_PTS.some(function (f) { return Math.hypot(f.x - tx, f.z - tz) < 50; })) continue;
       tr.add(tx, 0, tz, R(0, PI), R(0.7, 1.4));
     }
     tr.update();
@@ -862,11 +880,20 @@
           done += nb;
         }
       } else {
-        var Rr = SITE_R[L.id] * (L.id === 'loc_hq' ? 0.45 : 0.62), ringN = Math.max(1, Math.ceil(n / 520));
-        for (var k = 0; k < n; k++) {
-          var ring = k % ringN, a = (Math.floor(k / ringN) / Math.ceil(n / ringN)) * PI * 2, rr = Rr + ring * 3;
-          var x = L.x + Math.cos(a) * rr, z = L.z + Math.sin(a) * rr * 0.75 - (L.id === 'loc_airp_cargo' ? 200 : L.id === 'loc_log' ? -240 : 0);
-          g.add(x, 0, z, -a, SC, c(gi++));
+        // otryadlar yo'l yoqasida (binolar ichiga tushmaydi): eng yaqin yo'l bo'ylab, ikki tomonda 6x5 saf
+        var rk = null, rbest = 1e18; ['m39', 'bypass', 'airport', 'logi'].forEach(function (kk) { if (!RD[kk]) return; var dd = distRoad(kk, L.x, L.z); if (dd < rbest) { rbest = dd; rk = kk; } });
+        if (rbest > 250) {   // yaqinida magistral yo'q (shtab) — bino oldidagi maydonda saf
+          for (var h = 0; h < n; h++) { var hx = L.x - 30 + (h % 20) * 1.4, hz = L.z + SITE_R[L.id] * 0.55 + Math.floor(h / 20) * 1.6; g.add(hx, 0, hz, PI, SC, c(gi++)); }
+          return;
+        }
+        var s0 = nearestS(rk, L.x, L.z), hw = (BA.ROADS[rk] ? BA.ROADS[rk].width : 18) / 2, sq = 30, nsq = Math.ceil(n / sq), k = 0;
+        for (var s = 0; s < nsq; s++) {
+          var side = s % 2 ? 1 : -1, slot = Math.floor(s / 2), RL = RD[rk].L, dir = s0 > RL / 2 ? -1 : 1, ss = Math.max(15, Math.min(RL - 25, s0 + dir * (20 + slot * 34)));
+          var m = Math.min(sq, n - k);
+          for (var q = 0; q < m; q++, k++) {
+            var cp = at(rk, ss + (q % 6) * 1.4, side * (hw + 6 + Math.floor(q / 6) * 1.5));
+            g.add(cp.x, 0, cp.z, cp.yaw + (side > 0 ? -PI / 2 : PI / 2), SC, c(gi++));
+          }
         }
       }
     });
@@ -918,8 +945,9 @@
   function stagePos(locId, id) {
     var k = Math.max(0, M_ORDER.indexOf(id));
     if (locId === 'loc_erkin') { var p = at('m39', sE + 290 + (k % 8) * 26, (k % 2 ? 50 : -50) + (k > 7 ? (k % 2 ? 14 : -14) : 0)); return { x: p.x, z: p.z, yaw: p.yaw + PI }; }
-    var L = BA.byId(locId), a = k / M_ORDER.length * PI * 2 + 0.3, rr = SITE_R[locId] * 0.42;
-    return { x: L.x + Math.cos(a) * rr, z: L.z + Math.sin(a) * rr, yaw: -a };
+    // texnika stoyankasi: joy yonida ikki qator, bir tomonga qaragan
+    var L = BA.byId(locId), rr = SITE_R[locId] * 0.28, colN = k % 8, rowN = Math.floor(k / 8);
+    return { x: L.x - rr + colN * 30, z: L.z + rr * 0.9 + rowN * 26, yaw: 0 };
   }
   function meansModel(id, n) {
     var g = new THREE.Group(), kinds = { wtr: 'suv_purkagich', evk: 'evakuator', fvv: 'fvv', yxb: 'yxxb', bus: 'avtobus', drn: 'dron', amb: 'ambulance', ram: 'van' };
@@ -1371,7 +1399,7 @@
   }
   function focusZone(id, o) {
     o = o || {}; C.follow = null; S.cine = false; if (id) S.lastFocus = id;
-    if (id === 'all' || !id) { C.g.t.set(5200, 0, -4300); C.g.d = 15500; C.g.tilt = 0.98; C.g.yaw = -0.35; return; }
+    if (id === 'all' || !id) { var OW = BA.warp(5200, -4300); C.g.t.set(OW.x, 0, OW.z); C.g.d = 8200; C.g.tilt = 0.98; C.g.yaw = -0.35; return; }
     var L = BA.byId(id); if (!L) return;
     var fp = focusPoint(id), cam = o.cam || L.cam;
     C.g.t.set(fp.x, 0, fp.z); C.g.d = cam.d; C.g.tilt = cam.tilt; C.g.yaw = cam.yaw;
@@ -1438,7 +1466,7 @@
   /* =====================================================================
      OPENSTREETMAP: ҳақиқий бинолар, йўллар, ер қоплами ва дарахтлар (js/atrof_osm.js)
      ===================================================================== */
-  function osmPoly(a, off) { var o = []; for (var i = off; i + 1 < a.length; i += 2) o.push([a[i], a[i + 1]]); if (o.length > 2 && o[0][0] === o[o.length - 1][0] && o[0][1] === o[o.length - 1][1]) o.pop(); return o; }
+  function osmPoly(a, off) { var o = []; for (var i = off; i + 1 < a.length; i += 2) { var w_ = BA.warp(a[i], -a[i + 1]); o.push([w_.x, -w_.z]); } if (o.length > 2 && o[0][0] === o[o.length - 1][0] && o[0][1] === o[o.length - 1][1]) o.pop(); return o; }
   function inPoly(p, x, y) { var c = false; for (var i = 0, j = p.length - 1; i < p.length; j = i++) { if (((p[i][1] > y) !== (p[j][1] > y)) && (x < (p[j][0] - p[i][0]) * (y - p[i][1]) / (p[j][1] - p[i][1]) + p[i][0])) c = !c; } return c; }
   function buildOSM() {
     var A = window.ATROF; if (!A) return;
@@ -1903,6 +1931,7 @@
     vgFrame++;
     Object.keys(VG).forEach(function (key) {
       var V2 = VG[key], g = G[key]; if (!V2.on || !g) return;
+      if (V2.people) return;   // GLB odam modellari ko'rinmay qolardi — oddiy shakl doim ko'rinadi
       if (!V2.people) { if (V2.ver !== g.ver) { V2.ver = g.ver; V2.list.forEach(function (v) { vgCopy(v, g.m.instanceMatrix.array); }); } return; }
       // одамлар: камера нишони атрофидаги R радиусдаги нусхалар (кўпи билан CAP та) — GLB, қолганлари — оддий шакл
       var near = C.d < 900, src = g.m.instanceMatrix.array, i;

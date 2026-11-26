@@ -16,8 +16,14 @@
   var K = 0.0386, SX0 = 105, SY0 = 455, E_MIN = -4200, N_MIN = -3500;
 
   function geoToEN(lat, lon) { return { e: (lon - LON0) * M_LON, n: (lat - LAT0) * M_LAT }; }
-  function enToWorld(e, n) { return { x: e, z: -n }; }
-  function worldToEN(x, z) { return { e: x, n: -z }; }
+  // 3D ixchamlash: 2,6 km dan uzoq joylar markazga tortiladi (o'yin uchun masofa qisqaradi)
+  var WR0 = 2600, WC = 0.38;
+  function warpR(r) { return r <= WR0 ? r : WR0 + (r - WR0) * WC; }
+  function unwarpR(r) { return r <= WR0 ? r : WR0 + (r - WR0) / WC; }
+  function warp(x, z) { var r = Math.hypot(x, z); if (r <= WR0) return { x: x, z: z }; var k = warpR(r) / r; return { x: x * k, z: z * k }; }
+  function unwarp(x, z) { var r = Math.hypot(x, z); if (r <= WR0) return { x: x, z: z }; var k = unwarpR(r) / r; return { x: x * k, z: z * k }; }
+  function enToWorld(e, n) { return warp(e, -n); }
+  function worldToEN(x, z) { var p = unwarp(x, z); return { e: p.x, n: -p.z }; }
   function enToSvg(e, n) { return { x: SX0 + (e - E_MIN) * K, y: SY0 - (n - N_MIN) * K }; }
   function svgToEN(x, y) { return { e: (x - SX0) / K + E_MIN, n: (SY0 - y) / K + N_MIN }; }
   function worldToSvg(x, z) { var p = worldToEN(x, z); return enToSvg(p.e, p.n); }
@@ -37,7 +43,7 @@
     { id: 'loc_bypass', key: '4', lat: 41.2250, lon: 69.1950, perim: 'outer', resp: 'М.Алиқориев',
       name: 'Айланма йўллар ва ТАЙ туташмалари', short: 'Айланма йўллар', desc: 'Ташқи периметр: чиқиш йўлаклари ва эвакуация йўналишлари',
       cam: { d: 800, tilt: 0.66, yaw: -0.3 } },
-    { id: 'loc_fuel', key: '5', lat: 41.2420, lon: 69.2100, perim: 'outer', resp: 'М.Алиқориев',
+    { id: 'loc_fuel', key: '5', lat: 41.24137, lon: 69.21308, perim: 'outer', resp: 'М.Алиқориев',
       name: 'Ёқилғи қуйиш шохобчалари тармоғи', short: 'Ёқилғи шохобчалари', desc: 'Ташқи периметр: шохобчаларнинг 90 фоизида ёқилғи тугаган, километрлаб навбатлар',
       cam: { d: 650, tilt: 0.7, yaw: -0.5 } },
     { id: 'loc_hq', key: '6', lat: 41.2995, lon: 69.2670, perim: 'hq', resp: 'Р.И.Султанходжаев',
@@ -88,6 +94,6 @@
     LAT0: LAT0, LON0: LON0, K: K, VIEWBOX: '0 0 800 470',
     LOCS: LOCS, byId: function (id) { return BY_ID[id]; }, ROADS: ROADS, CROSS: CROSS,
     geoToEN: geoToEN, enToWorld: enToWorld, worldToEN: worldToEN, enToSvg: enToSvg, svgToEN: svgToEN,
-    worldToSvg: worldToSvg, svgToWorld: svgToWorld, roadWorld: roadWorld, roadSvgPath: roadSvgPath
+    worldToSvg: worldToSvg, warp: warp, WC: WC, svgToWorld: svgToWorld, roadWorld: roadWorld, roadSvgPath: roadSvgPath
   };
 })();
