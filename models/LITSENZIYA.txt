@@ -1,0 +1,26 @@
+3D modellar manbalari va litsenziyalari
+======================================
+CC-BY litsenziyali modellar uchun muallif va havola shu yerda ko'rsatilishi shart.
+Har bir model uchun manba sahifasidan ma'lumotni to'ldiring:
+
+fura_1.glb       — Mercedes (yuk mashinasi)     | muallif: ______ | havola: ______ | litsenziya: ______
+fura_2.glb       — Scania                       | muallif: ______ | havola: ______ | litsenziya: ______
+fura_3.glb       — Volvo                        | muallif: ______ | havola: ______ | litsenziya: ______
+fura_4.glb       — ZIL                          | muallif: ______ | havola: ______ | litsenziya: ______
+fura_hero_1.glb  — Volvo FH16                   | muallif: ______ | havola: ______ | litsenziya: ______
+fura_hero_2.glb  — Caterpillar CT680            | muallif: ______ | havola: ______ | litsenziya: ______
+xodim.glb        — Police (militsioner)         | muallif: ______ | havola: ______ | litsenziya: ______
+traktor_1.glb    — Stylized cartoon farm tractor| muallif: ______ | havola: ______ | litsenziya: ______
+suv_purkagich.glb— Daeji GWC 6500 water cannon  | muallif: ______ | havola: ______ | litsenziya: ______
+evakuator.glb    — Wrecker truck                | muallif: ______ | havola: ______ | litsenziya: ______
+tez_yordam.glb   — Shvan 92 ambulance           | muallif: ______ | havola: ______ | litsenziya: ______
+yxxb.glb         — Police car                   | muallif: ______ | havola: ______ | litsenziya: ______
+yxxb_2.glb       — 2013 Ford Shelby GT500 patrol| muallif: ______ | havola: ______ | litsenziya: ______
+avtobus.glb      — Scania Touring 2026          | muallif: ______ | havola: ______ | litsenziya: ______
+avtobus_2.glb    — Bus (low poly)               | muallif: ______ | havola: ______ | litsenziya: ______
+dron.glb         — Kvadrokopter                 | muallif: ______ | havola: ______ | litsenziya: ______
+
+Ovozlar: audio/sfx_radio, sfx_tirbandlik, sfx_alarm, sfx_dron — ElevenLabs (foydalanuvchi akkaunti) orqali yaratilgan;
+audio/sfx_qalqon.wav, sfx_suv.wav — dasturiy sintez (mualliflik cheklovi yo'q).
+
+Modellar Blender'da qayta ishlangan (poligonlar kamaytirilgan, teksturalar kichraytirilgan).
