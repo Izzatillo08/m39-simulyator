@@ -1,0 +1,46 @@
+/* Тактик вектор пиктограммалар (24×24, контур, currentColor) — эмодзилар ўрнига */
+(function () {
+  'use strict';
+  var P = {
+    officer: '<circle cx="12" cy="6" r="3"/><path d="M7 21v-6a5 5 0 0 1 10 0v6"/><path d="M9 4.5h6"/>',
+    drn: '<rect x="9" y="10" width="6" height="4" rx="1"/><path d="M9 10L5 6M15 10l4-4M9 14l-4 4M15 14l4 4"/><circle cx="5" cy="6" r="2.2"/><circle cx="19" cy="6" r="2.2"/><circle cx="5" cy="18" r="2.2"/><circle cx="19" cy="18" r="2.2"/>',
+    gas: '<rect x="6" y="9" width="7" height="12" rx="1.5"/><path d="M8 9V6h3v3M13 13h2"/><path d="M16 8a2.5 2.5 0 0 1 4 1.5A2.5 2.5 0 0 1 18 14h-1"/>',
+    wtr: '<rect x="2" y="13" width="14" height="5"/><path d="M16 15h3l2 3h-5"/><circle cx="6" cy="19" r="1.5"/><circle cx="16" cy="19" r="1.5"/><path d="M9 13V9l4-2"/><path d="M15 6c2 0 4 1 5 3M16 3c3 0 5 2 6 4"/>',
+    ram: '<rect x="3" y="12" width="15" height="6" rx="2"/><path d="M7 12V9h7v3M14 10.5h7"/><circle cx="7" cy="18" r="1.5"/><circle cx="14" cy="18" r="1.5"/>',
+    evk: '<path d="M2 17V11h7l2 3h3v3"/><path d="M14 14l5-7 2 1-4 6"/><path d="M21 8v4l-1 1"/><circle cx="5" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/>',
+    gun: '<circle cx="12" cy="12" r="7"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/><circle cx="12" cy="12" r="1.2"/>',
+    fvv: '<path d="M12 22c-4 0-7-3-7-7 0-4 3-6 4-10 1 2 2 3 3 3 0-2 1-4 3-6 0 4 4 6 4 12 0 5-3 8-7 8z"/><path d="M12 22c-2 0-3-1.5-3-3.5S11 15 12 13c1 2 3 3.5 3 5.5S14 22 12 22z"/>',
+    blk: '<path d="M2 20h20"/><path d="M3 20l1.5-6h5L11 20M13 20l1.5-6h5L21 20"/><path d="M7 14V9h10v5"/>',
+    yxb: '<path d="M3 16v-3l2-4h12l3 4v3z"/><circle cx="7" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/><path d="M9 9V6h6v3"/><path d="M10 4l-1-2M14 4l1-2"/>',
+    lrad: '<path d="M4 10v4h3l4 4V6L7 10z"/><path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11M20 4a11 11 0 0 1 0 16"/>',
+    amb: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 7v10M7 12h10"/>',
+    comm: '<path d="M12 12v10M8 22h8"/><circle cx="12" cy="10" r="2"/><path d="M8 6a6 6 0 0 0 0 8M16 6a6 6 0 0 1 0 8"/><path d="M3 3l18 18"/>',
+    bus: '<rect x="4" y="3" width="16" height="15" rx="2"/><path d="M4 11h16M8 18v3M16 18v3"/><circle cx="8" cy="14.5" r="1"/><circle cx="16" cy="14.5" r="1"/>',
+    k9: '<path d="M5 9l2-5 3 3h4l3-3 2 5"/><path d="M5 9c0 6 3 11 7 11s7-5 7-11"/><circle cx="9.5" cy="12" r=".8"/><circle cx="14.5" cy="12" r=".8"/><path d="M11 16h2l-1 1.5z"/>',
+    buf: '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M12 2v20M4 11h16"/>',
+    neg: '<path d="M3 5h11v7H7l-4 3z"/><path d="M10 15h7l4 3v-9h-4"/>',
+    plan: '<path d="M5 21V3"/><path d="M5 4h12l-2.5 4L17 12H5"/><circle cx="16" cy="18" r="3"/><path d="M16 16.5V18l1 1"/>',
+    split: '<path d="M12 21v-7"/><path d="M12 14L5 6M12 14l7-8"/><path d="M5 10V6h4M19 10V6h-4"/>',
+    media: '<rect x="3" y="7" width="18" height="12" rx="1"/><path d="M8 3l4 4 4-4"/><path d="M10 11v4l4-2z"/>',
+    cuff: '<circle cx="7" cy="15" r="4"/><circle cx="17" cy="15" r="4"/><path d="M10 12l4-3M7 11V8M17 11V8"/>',
+    lanes: '<path d="M4 21L8 3M20 21L16 3M12 5v3M12 11v3M12 17v3"/>',
+    crowd: '<circle cx="6" cy="8" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="8" r="2"/><path d="M3 18v-3a3 3 0 0 1 6 0M9 18v-5a3 3 0 0 1 6 0v5M15 18v-3a3 3 0 0 1 6 0"/>',
+    plane: '<path d="M2 13l8-1 4-8h2l-2 8 6-.5 2-2.5h1.5L22 14l1.5 3.5H22l-2-2.5-6-.5 2 8h-2l-4-8-8-1z"/>',
+    convoy: '<rect x="2" y="9" width="11" height="7" rx="3"/><path d="M13 11h4l3 3v2h-7"/><circle cx="6" cy="17.5" r="1.6"/><circle cx="16" cy="17.5" r="1.6"/>',
+    fuel: '<rect x="4" y="4" width="10" height="17" rx="1"/><path d="M4 10h10M14 8l4 3v7a2 2 0 0 0 4 0v-9l-3-3"/>',
+    close: '<circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/>',
+    check: '<path d="M4 12l5 5L20 6"/>',
+    cross: '<path d="M6 6l12 12M18 6L6 18"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    users: '<circle cx="9" cy="8" r="3.5"/><path d="M2 21v-2a6 6 0 0 1 12 0v2"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14a5 5 0 0 1 6 5v2"/>',
+    truck: '<path d="M2 16V7h12v9M14 10h4l4 4v2h-2"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+    pin: '<path d="M12 22s7-7.5 7-13a7 7 0 0 0-14 0c0 5.5 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/>',
+    law: '<path d="M12 3v18M5 21h14M4 8h16"/><path d="M7 8l-3 6a3 3 0 0 0 6 0zM17 8l-3 6a3 3 0 0 0 6 0z"/>',
+    heart: '<path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.5A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11z"/>',
+    shield2: '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M8 12l3 3 5-6"/>',
+    warn: '<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>',
+    order: '<path d="M4 6h10M4 12h7M4 18h4"/><path d="M18 4v15M15 16l3 3 3-3"/>',
+    lock: '<rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'
+  };
+  window.ICON = function (id, cls) { return '<svg class="i ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (P[id] || P.officer) + '</svg>'; };
+})();

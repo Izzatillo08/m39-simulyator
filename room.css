@@ -1,0 +1,130 @@
+/* ===== 2-версия: «Вазиятлар маркази» хонаси ===== */
+#room{position:absolute;left:0;top:0;width:2752px;height:1536px;transform-origin:0 0;z-index:1;overflow:hidden;background:#05070a}
+#room .bg,#room .fg{position:absolute;inset:0}
+#room .layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:center/cover no-repeat;transition:opacity 1.2s ease;opacity:1}
+#room .layer.in{opacity:0}
+#room .layer.radio{opacity:0;transition:opacity .35s ease;animation:none!important;z-index:2}
+/* fon qimirlamaydi — devor ekranlari rasmga mahkam yopishgan bo'lishi shart (jonli harakat videodan) */
+#room .fg{z-index:6;pointer-events:none}
+
+/* хона ёруғлиги кайфиятга қараб */
+#room .glare{position:absolute;inset:0;z-index:7;pointer-events:none;transition:background 2s}
+#room[data-mood=tense] .glare{background:radial-gradient(ellipse at 60% 20%,rgba(255,170,60,.06),transparent 60%)}
+#room[data-mood=angry] .glare{background:radial-gradient(ellipse at 60% 20%,rgba(255,40,40,.10),transparent 60%);animation:alarmPulse 2.4s ease-in-out infinite}
+@keyframes alarmPulse{50%{opacity:.4}}
+/* девор экранлари */
+#room .scr{position:absolute;left:0;top:0;transform-origin:0 0;z-index:5;overflow:hidden;background:#04070c;box-shadow:0 0 30px rgba(80,160,255,.18)}
+#room .scr::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:9;background:linear-gradient(115deg,rgba(255,255,255,.07),transparent 35%),repeating-linear-gradient(0deg,rgba(0,0,0,.08) 0 2px,transparent 2px 4px)}
+#room .scr .media,#room .scr .media>*{position:absolute;inset:0;width:100%;height:100%}
+#room .scr video{object-fit:cover}
+#room .scr .img{background:center/cover no-repeat;animation:kbIn 14s linear infinite alternate}
+#room .scr .hud{position:absolute;left:14px;top:12px;z-index:8;display:none;align-items:center;gap:8px;padding:6px 12px;background:rgba(4,7,12,.75);border-left:4px solid var(--r);color:#fff;font:800 22px InterD,Inter;letter-spacing:.02em}
+#room .scr .hud.on{display:flex}
+#room .scr .hud i{width:10px;height:10px;border-radius:50%;background:var(--r);animation:alarmPulse 1.2s infinite}
+#room #scr_s2,#room #scr_s3 .hud{font-size:26px}
+/* 3D кичик экран: босилади */
+#room #scr_s2{cursor:zoom-in}
+#room #scr_s2 #view3d{position:absolute;inset:0;pointer-events:none}
+#room #scr_s2::before{content:'3D • БОСИНГ';position:absolute;right:12px;bottom:10px;z-index:10;padding:4px 10px;background:rgba(4,7,12,.75);color:#fff;font:800 22px Inter;letter-spacing:.06em}
+/* харита экранда */
+#room .scr #map2d{position:absolute;inset:0;width:100%;height:100%;left:0;top:0;border:0;border-radius:0;z-index:7;display:flex;flex-direction:column}
+#room .scr #map2d svg{flex:1;height:100%;width:100%}
+#room .scr #map2d header{font-size:18px}
+#room #scr_s1 #map2d #mapControls,#room #scr_main #map2d #mapControls{display:none}
+/* кириш ва натижа саҳналари — асосий экранда */
+#room #scr_main #vidOv{position:absolute;inset:0;z-index:8;display:none;background:#000}
+#room #scr_main #vidOv.on{display:flex}
+#room #scr_main #vidOv video{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:cover;margin:0}
+#room #scr_main #vidImg{inset:0}
+#room #scr_main #vidOv>.btn{position:absolute;right:20px;bottom:20px;margin:0;font-size:22px;padding:14px 26px}
+#room #scr_main #vidCap{left:20px;bottom:20px;font-size:26px}
+/* 3D катта ойна */
+#big3d{position:absolute;inset:40px 60px 40px 230px;z-index:30;display:none;flex-direction:column;background:#04070c;border:1px solid var(--ln2);box-shadow:0 20px 80px rgba(0,0,0,.7)}
+#big3d.on{display:flex}
+#big3d .bh{display:flex;align-items:center;gap:12px;padding:8px 12px;border-bottom:1px solid var(--ln2)}
+#big3d .bh .btn{margin-left:auto;flex:none}
+#big3d .bw{position:relative;flex:1;overflow:hidden}
+#stage.narrow #big3d{inset:14px 14px 14px 76px}
+#big3d .bw #view3d{position:absolute;inset:0}
+#stage.big3d #toolBox{z-index:31;right:72px;top:96px}
+/* чапдаги вертикал локациялар */
+#locAll{position:absolute;left:14px;top:14px;z-index:12;width:190px;padding:10px 12px;text-align:left;background:rgba(4,7,12,.82);border:1px solid var(--ln2);color:#fff;font:800 13px Inter;letter-spacing:.1em;cursor:pointer}
+#locAll.on,#locAll:hover{border-color:var(--r2);background:rgba(160,20,30,.55)}
+#locBar.vert{top:60px;left:14px;flex-direction:column;flex-wrap:nowrap;max-width:none;width:190px;z-index:12}
+#locBar.vert button{width:100%;justify-content:flex-start;padding:9px 10px;background:rgba(4,7,12,.82);font-size:13px}
+#locBar.vert button span{display:inline!important}
+/* yangi xonada chap ekranlar band — ro'yxat pastda, stollar ustida */
+#locAll{top:auto;bottom:216px}
+#locBar.vert{top:auto;bottom:16px}
+#locBar.vert button{height:34px}
+#stage.narrow #locAll{bottom:254px}
+/* 1-модул тортма тугмалари — локациялар рўйхати билан устма-уст тушмасин */
+#m1ui .dock{top:auto;bottom:84px;transform:none}
+#m1ui .dock.l{left:220px}#stage.narrow #m1ui .dock.l{left:76px}
+#locBar.vert button{padding:7px 10px;font-size:12px}
+#stage.narrow #locAll{width:52px;padding:8px 4px;font-size:9px;letter-spacing:0;text-align:center}
+#stage.narrow #locBar.vert{width:52px}
+#stage.narrow #locBar.vert button span{display:none!important}
+#stage.narrow #locBar.vert button{justify-content:center}
+/* tanlash (savol va variantlar) — alohida panel emas, xona rasmi ustida, o'ng pastda (stollar ustida) */
+#main,#main.nopanel{grid-template-columns:1fr!important;grid-template-rows:1fr!important}
+#panel{position:absolute;right:18px;bottom:18px;width:min(460px,calc(100% - 260px));max-height:calc(100% - 140px);z-index:20;
+  background:rgba(6,9,14,.86);backdrop-filter:blur(6px);border:1px solid var(--ln2);border-left:3px solid var(--r);box-shadow:0 18px 60px rgba(0,0,0,.6)}
+#main.nopanel #panel{display:none}
+#panel .ph h2{font-size:20px}
+/* obyekt ma'lumot oynachasi va «Vaziyatlar markazi» — 2-versiyada yo'q (biz o'zimiz shu markazdamiz) */
+#info{display:none!important}
+#locBar.vert [data-l=loc_hq]{display:none}
+/* yakuniy ball ekrani */
+#certOv .score{display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center;padding:30px;width:100%;height:100%;justify-content:center;background:radial-gradient(ellipse at center,#0d1630 0%,#05070c 70%)}
+#certOv .score small{font:800 14px Inter;letter-spacing:.32em;color:#f2c14e}
+#certOv .score .ring{position:relative;width:280px;height:280px}
+#certOv .score svg{width:100%;height:100%;transform:rotate(-90deg)}
+#certOv .score circle{fill:none;stroke-width:16;stroke-linecap:round}
+#certOv .score .bg{stroke:#1b2335}
+#certOv .score .fg{transition:stroke-dashoffset 1.6s ease-out}
+#certOv .score .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#certOv .score .num b{font:900 96px InterD,Inter;color:#fff;line-height:1}
+#certOv .score .num span{font:700 20px Inter;color:#a9b3c7;margin-top:6px}
+#certOv .score .lvl{font:900 54px InterD,Inter;letter-spacing:.04em;padding:6px 40px;border:2px solid;border-radius:10px}
+#certOv .score p{font:500 20px Inter;color:#d6dbe6;max-width:720px}
+#certOv .score .btn{flex:none;height:auto;padding:16px 36px;min-width:260px;font-size:18px;box-shadow:0 10px 40px rgba(220,30,40,.35)}
+#certOv .score.g2 .fg,#certOv .score.g2 .lvl{stroke:#e0262f;color:#e0262f;border-color:#e0262f}#certOv .score.g2 .lvl{background:rgba(224,38,47,.12)}
+#certOv .score.g3 .fg,#certOv .score.g3 .lvl{stroke:#f2a93b;color:#f2a93b;border-color:#f2a93b}#certOv .score.g3 .lvl{background:rgba(242,169,59,.12)}
+#certOv .score.g4 .fg,#certOv .score.g4 .lvl{stroke:#3b8cf2;color:#3b8cf2;border-color:#3b8cf2}#certOv .score.g4 .lvl{background:rgba(59,140,242,.12)}
+#certOv .score.g5 .fg,#certOv .score.g5 .lvl{stroke:#2fc46b;color:#2fc46b;border-color:#2fc46b}#certOv .score.g5 .lvl{background:rgba(47,196,107,.12)}
+/* 1-modul tortma paneli ochiq — lokatsiyalar ro'yxati uning ostida qolmasin */
+#stage.dl #locAll,#stage.dl #locBar,#stage.dr #panel{display:none!important}
+#stage.dl .dock.l{left:440px!important}
+/* taktik xaritada «Vaziyatlar markazi» belgisi kerak emas */
+#mapSvg #ml_loc_hq{display:none}
+/* эски элементлар 2-версияда керак эмас */
+#stage #camStrip,#stage #hqImg{display:none!important}
+#stage>#toolBox{display:none}
+#stage.big3d>#toolBox{display:block}
+#stage{background:#05070a}
+/* 3-versiya: qulflangan qarorlar (oldingi bosqich bajarilmagan) */
+.qtiles button.lock{opacity:.55;cursor:not-allowed}
+.qtiles button.lock .lk{display:block;margin-top:4px;font-size:11px;font-weight:600;color:var(--r2)}
+/* 1-modul yo'q */
+#m1ui{display:none!important}
+/* ===== zamonaviy shaffof «shisha» oynalar: xona orqadan ko'rinib turadi ===== */
+#stage .ov-card,#panel,#locAll,#locBar.vert button,#m1ui .dock,#m1ui .drawer,#big3d,.pact .btn.ghost,.pact .pscore{
+  background:linear-gradient(160deg,rgba(18,26,40,.58),rgba(6,10,18,.46))!important;
+  backdrop-filter:blur(14px) saturate(1.25);-webkit-backdrop-filter:blur(14px) saturate(1.25);
+  border:1px solid rgba(160,190,230,.18)!important;box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)!important;border-radius:12px}
+#panel{border-left:3px solid rgba(225,29,72,.85)!important}
+#panel .qcard,#panel .opts2 button,#panel .qtiles button,#panel .ltiles button,#panel .res,#panel .notes>div,#panel .hint{
+  background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px;backdrop-filter:none}
+#panel .opts2 button:hover,#panel .qtiles button:not([disabled]):hover,#panel .ltiles button:hover{background:rgba(255,255,255,.10)!important;border-color:rgba(225,29,72,.6)!important}
+#locBar.vert button.on,#locAll.on{background:linear-gradient(160deg,rgba(225,29,72,.55),rgba(120,10,30,.45))!important;border-color:rgba(255,120,140,.5)!important}
+#top{background:rgba(5,8,14,.72)!important;backdrop-filter:blur(12px)}
+#top .mt,#top .tb{background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:10px}
+#room .scr .hud{border-radius:0 8px 8px 0;background:rgba(4,7,12,.55);backdrop-filter:blur(6px)}
+/* rahbar ishorasi qatlami (faqat rahbar atrofi) */
+#room .radioL{position:absolute;inset:0;z-index:7;pointer-events:none;opacity:0;transition:opacity .3s ease}
+#room .radioL.on{opacity:1}
+#room .radioL video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#room .radioL.rb{z-index:1}
+/* ratsiya klipi faqat rahbar zonasida — xona jonli videoda qoladi */
+#room .radioL.rb{display:none}
