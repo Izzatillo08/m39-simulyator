@@ -128,3 +128,41 @@
 #room .radioL.rb{z-index:1}
 /* ratsiya klipi faqat rahbar zonasida — xona jonli videoda qoladi */
 #room .radioL.rb{display:none}
+/* ===== jonli xona ===== */
+/* kamera hissi: juda sekin siljish; keskin vaziyatda biroz yaqinlashadi */
+#room.live{animation:camDrift 26s ease-in-out infinite alternate;transition:scale 2.5s ease}
+@keyframes camDrift{0%{translate:0 0}35%{translate:-7px 3px}70%{translate:-3px -4px}100%{translate:-9px 1px}}
+#room.live{scale:1.012}
+#room.live[data-mood=tense]{scale:1.02}
+#room.live.alarm{scale:1.035}
+/* signal chirog'lari */
+#room .beacons{position:absolute;inset:0;z-index:8;pointer-events:none}
+#room .beacons i{position:absolute;width:70px;height:46px;margin-left:-35px;border-radius:30px 30px 8px 8px;background:#3a0b0b;box-shadow:inset 0 -6px 0 #1a0505;opacity:0;transition:opacity .6s}
+#room .beacons i::after{content:'';position:absolute;left:50%;top:50%;width:1400px;height:1400px;margin:-700px 0 0 -700px;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(255,30,30,.55),rgba(255,30,30,0) 22%,rgba(255,30,30,0) 50%,rgba(255,30,30,.55) 50%,rgba(255,30,30,0) 72%,rgba(255,30,30,0));
+  -webkit-mask:radial-gradient(circle,#000 0,rgba(0,0,0,.6) 18%,transparent 60%);mask:radial-gradient(circle,#000 0,rgba(0,0,0,.6) 18%,transparent 60%);animation:beacon 1.6s linear infinite;mix-blend-mode:screen}
+#room.alarm .beacons i{opacity:1;background:#ff2a2a;box-shadow:0 0 40px 12px rgba(255,40,40,.8),inset 0 -6px 0 #a00}
+@keyframes beacon{to{transform:rotate(360deg)}}
+#room.alarm::after{content:'';position:absolute;inset:0;z-index:7;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,rgba(255,0,0,.22),rgba(120,0,0,.10) 55%,transparent 80%);animation:alarmPulse 1.6s ease-in-out infinite}
+#room.alarm .scr{box-shadow:0 0 40px rgba(255,40,40,.35)}
+/* devor soati */
+#room .wclock{position:absolute;left:1222px;top:212px;width:316px;height:86px;z-index:5;display:flex;align-items:center;gap:14px;padding:0 18px;background:linear-gradient(#0b0f14,#05070a);border:2px solid #1d2733;border-radius:8px;box-shadow:0 0 22px rgba(80,160,255,.15);color:#ff4d3d;font-family:'Courier New',monospace}
+#room .wclock b{font:700 54px/1 'Courier New',monospace;letter-spacing:2px;text-shadow:0 0 14px rgba(255,60,40,.85)}
+#room .wclock small{display:flex;flex-direction:column;color:#8fb3d9;font:800 15px Inter;letter-spacing:.12em}
+#room .wclock em{position:absolute;right:14px;bottom:8px;color:#5f7a96;font:700 13px Inter;font-style:normal}
+/* ekranlarda REC + vaqt */
+#room .scr .rec{position:absolute;right:14px;top:12px;z-index:9;display:flex;align-items:center;gap:8px;padding:4px 10px;background:rgba(0,0,0,.55);color:#fff;font:700 20px 'Courier New',monospace;letter-spacing:1px}
+#room .scr .rec i{width:12px;height:12px;border-radius:50%;background:#ff2d2d;animation:alarmPulse 1.2s infinite}
+#room #scr_s2 .rec,#room #scr_s1 .rec{display:none}
+/* tezkor xabarlar lentasi */
+#room .ticker{position:absolute;left:0;right:0;bottom:0;height:54px;z-index:10;display:flex;align-items:center;background:rgba(6,10,16,.92);border-top:3px solid var(--r);font:800 24px Inter;color:#fff;overflow:hidden}
+#room .ticker>b{flex:none;height:100%;display:flex;align-items:center;padding:0 18px;background:var(--r);letter-spacing:.06em;font-size:20px}
+#room .ticker .tw{flex:1;overflow:hidden;white-space:nowrap}
+#room .ticker .tt{display:inline-block;padding-left:100%;animation:tick 26s linear infinite}
+#room .ticker .tt span{opacity:.75}#room .ticker .tt span.nw{opacity:1;color:#ffd84d}
+#room .ticker .tt i{margin:0 26px;color:var(--r);font-style:normal}
+@keyframes tick{to{transform:translateX(-100%)}}
+#room.alarm .ticker>b{animation:alarmPulse .8s infinite}
+#room[data-mood=tense]::after{content:'';position:absolute;inset:0;z-index:7;pointer-events:none;background:radial-gradient(ellipse at 50% 10%,rgba(255,150,40,.10),transparent 70%)}
+#room.alarm .bg{filter:brightness(.78) saturate(.9)}
+#room.alarm .fg,#room.alarm .radioL{filter:brightness(.78) saturate(.9)}

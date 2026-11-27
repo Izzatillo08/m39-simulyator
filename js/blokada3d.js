@@ -1858,7 +1858,7 @@
           var k = target[name] / (person ? sz.y : Math.max(sz.x, sz.z));
           g.translate(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2); g.scale(k, k, k);
           if (person) { var Tn = new Float32Array(g.attributes.position.count).fill(0.35); g.setAttribute('tint', new THREE.BufferAttribute(Tn, 1)); }   // форма рангини енгил сақлаш
-          inst[name].forEach(function (key) { G[key].m.geometry = g; G[key].m.material = person ? MAT.man : new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.25 }); if (person) G[key].glb = true; });
+          inst[name].forEach(function (key) { G[key].m.geometry = g; G[key].m.material = person ? MAT.man : new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.25 }); if (person) { G[key].glb = true; G[key].glbGeo = g; LOD = null; } });
           GLB_PEOPLE = GLB_PEOPLE || person;
         } else return;
         loaded.push(f);
@@ -2016,18 +2016,30 @@
       prev = j; pool[j].idx.push(i);
     }
     all.forEach(function (v) { v.parts.forEach(function (im) { im.count = v.idx.length; }); });
-    G.fura.m.visible = false; FV.on = true; FV.ver = -1; furaSync();
+    G.fura.m.visible = true; FV.on = true; FV.ver = -1; furaKey = ''; furaSync();
   }
+  // yuk mashinalari: batafsil (GLB) model faqat kamera atrofidagilarga (R ichida, ko'pi bilan CAP), qolganlari oddiy shaklda
+  var furaFrame = 0, furaNear = [], furaKey = '', furaVer = -1;
   function furaSync() {
-    if (!FV.on || FV.ver === G.fura.ver) return; FV.ver = G.fura.ver;
-    var src = G.fura.m.instanceMatrix.array;
+    if (!FV.on) return;
+    furaFrame++;
+    var R = Math.max(450, C.d * 1.2), key = Math.round(C.t.x / 60) + ',' + Math.round(C.t.z / 60) + ',' + Math.round(R / 100);
+    if (key === furaKey && G.fura.ver === furaVer && furaFrame % 30) return; furaKey = key;
+    var g = G.fura, src = g.m.instanceMatrix.array, R2 = R * R, CAP = [120, 220, 380][Q.tier] || 220, tx = C.t.x, tz = C.t.z, used = 0;
+    furaNear.forEach(function (j) { g.write(j); }); furaNear = [];
+    var near = {}; 
     FV.mass.concat(FV.hero).forEach(function (v) {
+      var sel = [];
+      for (var k = 0; k < v.idx.length && used < CAP; k++) { var ii = v.idx[k], dx = g.x[ii] - tx, dz = g.z[ii] - tz; if (dx * dx + dz * dz < R2) { sel.push(ii); used++; } }
       v.parts.forEach(function (im) {
         var a = im.instanceMatrix.array;
-        for (var k = 0; k < v.idx.length; k++) { var o = v.idx[k] * 16; for (var e = 0; e < 16; e++) a[k * 16 + e] = src[o + e]; }
-        im.instanceMatrix.needsUpdate = true;
+        for (var n = 0; n < sel.length; n++) { var o = sel[n] * 16; for (var e = 0; e < 16; e++) a[n * 16 + e] = src[o + e]; }
+        im.count = sel.length; im.instanceMatrix.needsUpdate = true;
       });
+      sel.forEach(function (ii) { near[ii] = 1; });
     });
+    Object.keys(near).forEach(function (ii) { src.set(_zero, ii * 16); furaNear.push(+ii); });
+    g.m.instanceMatrix.needsUpdate = true; g.dirty = false; g.m.visible = true; furaVer = g.ver;
   }
   // битта юк машинаси (эффектлар учун): русумли модел бўлса — ўшандан нусха
   function furaMesh(n) {
@@ -2048,11 +2060,15 @@
     // juda uzoqdan (3,5 km+) odamlar piksel o'lchamidan ham kichik — ular umuman chizilmaydi (minglab nusxa tejaladi)
     var far = C.d > 3500;
     if (far !== FAR) { FAR = far; ['vest', 'prov', 'offc', 'buf', 'shield', 'civ', 'extra'].forEach(function (k) { if (G[k]) G[k].m.visible = !far; }); }
-    var near = C.d < 900;
+    // soyalar faqat yaqindan (1,4 km gacha) — uzoqdan sezilmaydi, lekin sahnani ikki marta chizdiradi
+    var shOn = Q.tier >= 1 && !S.lite && C.d < 1400;
+    if (sun.castShadow !== shOn) { sun.castShadow = shOn; if (!shOn && sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+    var near = C.d < 260;
     if (LOD === near || !GEO.manLo) return; LOD = near;
-    if (!G.vest.glb) G.vest.m.geometry = G.civ.m.geometry = G.extra.m.geometry = near ? GEO.man : GEO.manLo;
-    if (!G.prov.glb) G.prov.m.geometry = near ? GEO.manMask : GEO.manMaskLo;
-    if (!G.offc.glb) G.offc.m.geometry = G.buf.m.geometry = near ? GEO.manPol : GEO.manPolLo;
+    // yaqinda — batafsil (GLB bo'lsa u), uzoqda — yengil shakl (GLB odamlar ham uzoqda yengillashadi)
+    G.vest.m.geometry = near ? (G.vest.glbGeo || GEO.man) : GEO.manLo; G.civ.m.geometry = near ? (G.civ.glbGeo || GEO.man) : GEO.manLo; G.extra.m.geometry = near ? (G.extra.glbGeo || GEO.man) : GEO.manLo;
+    G.prov.m.geometry = near ? (G.prov.glbGeo || GEO.manMask) : GEO.manMaskLo;
+    G.offc.m.geometry = near ? (G.offc.glbGeo || GEO.manPol) : GEO.manPolLo; G.buf.m.geometry = near ? (G.buf.glbGeo || GEO.manPol) : GEO.manPolLo;
   }
   function resize() {
     var w = host.clientWidth || 1, h = host.clientHeight || 1;

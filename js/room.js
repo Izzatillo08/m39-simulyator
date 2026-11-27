@@ -92,6 +92,7 @@
     fit(); window.addEventListener('resize', fit); if (window.ResizeObserver) new ResizeObserver(fit).observe(stage);
     setInterval(camCycle, 7000); camCycle(); hookAudio();
     setInterval(idleGesture, 18000);
+    liveBuild();
     if (window.S3D && S3D.lite) S3D.lite(true);   // 3D boshidan yengil rejimda (devordagi kichik ekran)
     // fayllar ro'yxati aniqlangach — tinch xona (jonli video bo'lsa, u) boshidanoq qo'yiladi
     var tries = 0, w8 = setInterval(function () { if (has('videos', 'room_base.jpg') || ++tries > 40) { clearInterval(w8); if (!MOOD) mood(0); } }, 250);
@@ -180,7 +181,8 @@
     var m = panic >= 65 ? 'angry' : panic >= 40 ? 'tense' : 'calm';
     if (m === MOOD) return; MOOD = m;
     room.dataset.mood = m;
-    setBg(firstHave(CFG.bg[m]) || CFG.bg.base);
+    // xona rasmi almashmaydi (boshliq qatlamlari bilan mos qolsin) — keskinlik yorug'lik va signal bilan beriladi
+    setBg(firstHave(CFG.bg.calm) || CFG.bg.base);
   }
 
   /* ---------- rahbar ratsiya orqali buyruq beradi ----------
@@ -250,6 +252,63 @@
   }
 
   /* ---------- иловадан келадиган ҳодисалар ---------- */
+  /* ---------- JONLI XONA: signal chirog'i, ekran HUD, xabarlar lentasi, devor soati, kamera, fon ovozlari ---------- */
+  var LIVE = { tick: null, msgs: [], ctx: null };
+  var FEED = {
+    calm: ['Навбатчи: «Эркин» постида ҳолат назоратда', 'ЙПХ: М-39 шимолий қаторида ҳаракат секинлашди', 'Логистика маркази: кириш йўли қисман очиқ',
+      'Аэропорт: авиакеросин захираси назоратда', 'Шохобчалар: навбатлар ўртача', 'Тезкор гуруҳ: дрон кузатуви давом этмоқда', 'Штаб: ахборот хизмати брифингга тайёр'],
+    tense: ['Навбатчи: «Эркин»да олломон кўпаймоқда', 'ЙПХ: айланма йўлда 3 км тирбандлик', 'Шохобча №4: навбатда жанжал', 'Аэропорт: захира 2 соатга етади',
+      'Тезкор гуруҳ: ижтимоий тармоқларда ёлғон хабар тарқалмоқда', 'Тез ёрдам: 2 нафар ҳайдовчи ҳушдан кетган', 'Логистика: 40 та TIR тўхтаб қолди'],
+    angry: ['ДИҚҚАТ! «Эркин» постида тўқнашув хавфи', 'ШОШИЛИНЧ: провокаторлар тўсиқни ёриб ўтишга уринмоқда', 'Шохобчалар: ёқилғи тугади, ҳайдовчилар норози',
+      'Тез ёрдам: жабрланганлар сони ортмоқда', 'Вазирлик: вазият бўйича зудлик билан ахборот талаб қилинмоқда', 'ЙПХ: М-39 тўлиқ тўсилди']
+  };
+  function liveBuild() {
+    // signal chirog'lari (shiftda) va qizil yorug'lik
+    var bc = document.createElement('div'); bc.className = 'beacons';
+    [[520, 70], [2230, 70]].forEach(function (p) { var b = document.createElement('i'); b.style.left = p[0] + 'px'; b.style.top = p[1] + 'px'; bc.appendChild(b); });
+    room.appendChild(bc);
+    // devor soati (asosiy ekran ustida)
+    var ck = document.createElement('div'); ck.className = 'wclock'; ck.innerHTML = '<b id="wcT">07:30</b><small>' + T('ТОШКЕНТ') + '</small><em id="wcD"></em>'; room.appendChild(ck);
+    // ekranlarda REC va vaqt
+    Object.keys(S).forEach(function (k) { if (!S[k] || !S[k].classList || !S[k].classList.contains('scr')) return; var r = document.createElement('div'); r.className = 'rec'; r.innerHTML = '<i></i>REC <span></span>'; S[k].appendChild(r); });
+    // xabarlar lentasi (asosiy ekran ostida)
+    var tk = document.createElement('div'); tk.className = 'ticker'; tk.innerHTML = '<b>' + T('ТЕЗКОР ХАБАРЛАР') + '</b><div class="tw"><div class="tt" id="tkT"></div></div>'; S.main.appendChild(tk);
+    room.classList.add('live');
+    LIVE.tick = setInterval(liveTick, 1000); liveTick(); feedNext();
+    setInterval(feedNext, 9000);
+    setInterval(ambient, 6000);
+  }
+  function liveTick() {
+    var c = document.getElementById('clock'), t = c ? c.textContent : '';
+    var s = (new Date()).getSeconds(), ss = (s < 10 ? '0' : '') + s;
+    var wt = document.getElementById('wcT'); if (wt) wt.textContent = t;
+    var wd = document.getElementById('wcD'); if (wd) wd.textContent = '16.10.2026';
+    [].forEach.call(room.querySelectorAll('.rec span'), function (e) { e.textContent = t + ':' + ss; });
+  }
+  function feedNext() {
+    var pool = FEED[MOOD || 'calm']; var m = pool[Math.floor(Math.random() * pool.length)];
+    LIVE.msgs.unshift(T(m)); LIVE.msgs = LIVE.msgs.slice(0, 4);
+    var e = document.getElementById('tkT'); if (!e) return;
+    e.innerHTML = LIVE.msgs.map(function (x, i) { return '<span' + (i ? '' : ' class="nw"') + '>' + x + '</span>'; }).join('<i>•</i>');
+    e.style.animation = 'none'; void e.offsetWidth; e.style.animation = '';
+  }
+  // fon ovozlari: telefon jiringlashi, klaviatura, uzoq ratsiya — juda past ovozda
+  function actx() { if (LIVE.ctx) return LIVE.ctx; var A = window.AudioContext || window.webkitAudioContext; if (!A) return null; LIVE.ctx = new A(); return LIVE.ctx; }
+  function beep(f, t0, d, v, type) { var c = actx(); if (!c) return; var o = c.createOscillator(), g = c.createGain(); o.type = type || 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, c.currentTime + t0); g.gain.linearRampToValueAtTime(v, c.currentTime + t0 + 0.01); g.gain.setValueAtTime(v, c.currentTime + t0 + d - 0.02); g.gain.linearRampToValueAtTime(0, c.currentTime + t0 + d); o.connect(g); g.connect(c.destination); o.start(c.currentTime + t0); o.stop(c.currentTime + t0 + d + 0.05); }
+  function ambient() {
+    if (!window.AUD || AUD.muted || document.hidden) return; var c = actx(); if (!c) return; if (c.state === 'suspended') c.resume().catch(function () {});
+    var r = Math.random(), k = MOOD === 'angry' ? 1.6 : MOOD === 'tense' ? 1.2 : 1;
+    if (r < 0.18 * k) { for (var i = 0; i < 2; i++) { beep(440, i * 0.5, 0.35, 0.012, 'square'); beep(480, i * 0.5, 0.35, 0.012, 'square'); } }   // telefon
+    else if (r < 0.55) { for (var j = 0; j < 7 + Math.random() * 8; j++) beep(1800 + Math.random() * 900, j * (0.07 + Math.random() * 0.08), 0.015, 0.008, 'square'); }   // klaviatura
+    else if (r < 0.75 * k) { AUD.sfx && AUD.sfx('radio', 0.25); }   // uzoqdagi ratsiya
+  }
+  var _mood0 = mood;
+  mood = function (panic) {
+    var prev = MOOD; _mood0(panic);
+    if (MOOD === 'angry' && prev !== 'angry') { window.AUD && AUD.sfx('alarm', 0.8); feedNext(); }
+    if (room) room.classList.toggle('alarm', MOOD === 'angry');
+  };
+
   window.ROOM = {
     cfg: CFG, loc: loc, general: general, mood: mood, open3d: open3d,
     enter: function () { var vo = $('vidOv'); if (vo.parentNode !== S.main) S.main.appendChild(vo); },

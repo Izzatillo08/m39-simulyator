@@ -38,7 +38,25 @@
 
   /* ---------------- умумий UI ---------------- */
   function toast(t, ms) { var e = $('toast'); e.innerHTML = t; e.classList.add('on'); clearTimeout(e._t); e._t = setTimeout(function () { e.classList.remove('on'); }, ms || 2400); }
-  function panel(html) { $('panel').innerHTML = html; $('main').classList.toggle('nopanel', !html); }
+  function panel(html) {
+    var P = $('panel'); P.innerHTML = html; $('main').classList.toggle('nopanel', !html); P.classList.remove('mini');
+    if (!document.getElementById('phCss')) { var st = document.createElement('style'); st.id = 'phCss';
+      st.textContent = '.ph{position:relative;padding-left:52px!important;padding-right:52px!important;min-height:46px}' +
+        '.phb{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#fff;cursor:pointer;z-index:3}' +
+        '.phb:hover{background:rgba(255,255,255,.16)}.phb svg{width:18px;height:18px}.phb.bk{left:10px}.phb.mn{right:10px}.phb[hidden]{display:none}' +
+        '#panel.mini>*:not(.ph){display:none!important}#panel.mini{height:auto!important;max-height:none!important;bottom:auto!important}' +
+        '#panel .scroll>.back.dup{display:none}';
+      document.head.appendChild(st); }
+    var ph = P.querySelector('.ph'); if (!ph) return;
+    var inner = P.querySelector('.scroll .back, .back');
+    var bk = document.createElement('button'); bk.className = 'phb bk'; bk.title = T('Орқага');
+    bk.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+    if (inner) { inner.classList.add('dup'); bk.onclick = function () { inner.click(); }; } else bk.hidden = true;
+    var mn = document.createElement('button'); mn.className = 'phb mn'; mn.title = T('Кичрайтириш');
+    var icMin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12"/></svg>', icMax = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';
+    mn.innerHTML = icMin; mn.onclick = function () { var on = P.classList.toggle('mini'); mn.innerHTML = on ? icMax : icMin; mn.title = on ? T('Катталаштириш') : T('Кичрайтириш'); };
+    ph.appendChild(bk); ph.appendChild(mn);
+  }
   function clockText(min) { var t = 7 * 60 + 30 + (min || 0), h = Math.floor(t / 60), m = t % 60; return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m; }
   function setClock(min) { $('clock').textContent = clockText(min); }
   function sfx(n, a) { window.AUD && AUD.sfx(n, a); }
@@ -764,7 +782,7 @@
         return '<button data-o="' + oi + '" style="min-height:auto;flex-direction:row;text-align:left;padding:12px 14px;justify-content:flex-start"><span class="oi" style="width:42px;height:42px;flex:none">' + ICON(o.ic) + '</span><span class="ot">' + o.t + '</span></button>';
       }).join('') + '</div>' +
       '<div id="out"></div></div><div class="foot hide" id="m2foot"><button class="btn" id="bNext">ДАВОМ ЭТИШ</button></div>');
-    $('bBack').onclick = function () { if (!D.answered) renderHome(); };
+    $('bBack').onclick = function () { if (!D.answered) renderHome(); else { var nx = $('bNext'); if (nx) nx.click(); } };
     [].forEach.call(document.querySelectorAll('#opts button'), function (b) { b.onclick = function () { answer(+b.dataset.o); }; });
     var fz = q.fxLoc || q.loc; if (window.ROOM) { ROOM.loc(q.loc); if (fz !== 'loc_hq') S3('focusZone', fz); } else if (fz === 'loc_hq') hqImg(true); else { hqImg(false); S3('focusZone', fz); } markLoc(q.loc); mapState([], q.loc);
     // savol ovozi: lokatsiya muammosi aytilayotgan bo'lsa — u tugagach (bir-birini bo'lmasin)
