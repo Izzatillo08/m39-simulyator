@@ -822,6 +822,7 @@
       notes.push(['warn', 'Критик хато (' + D.critN + ' / ' + (LIVES + 1) + ') — оғир оқибатлар. ' + (LIVES + 1) + '-критик хатода машғулот якунланади']);
       sfx('alarm', 1.5);
     }
+    if (window.ROOM && ROOM.react) ROOM.react(k);
     if (k === 'crit') {
       D.res[q.id] = 'crit'; D.pts[q.id] = 0; D.crit = { q: q, o: o }; logIt(q, o, k, notes);
       var cv = resVideo(q.n, false); if (cv && window.ROOM) ROOM.result(q.fxLoc || q.loc, cv); return cv ? playMedia(cv, function () { critical(q, o); }) : critical(q, o);

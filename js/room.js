@@ -93,6 +93,7 @@
     setInterval(camCycle, 7000); camCycle(); hookAudio();
     setInterval(idleGesture, 18000);
     liveBuild();
+    var cw8 = 0, cwT = setInterval(function () { chiefInit(); if (CH.on || ++cw8 > 40) clearInterval(cwT); }, 300);
     if (window.S3D && S3D.lite) S3D.lite(true);   // 3D boshidan yengil rejimda (devordagi kichik ekran)
     // fayllar ro'yxati aniqlangach — tinch xona (jonli video bo'lsa, u) boshidanoq qo'yiladi
     var tries = 0, w8 = setInterval(function () { if (has('videos', 'room_base.jpg') || ++tries > 40) { clearInterval(w8); if (!MOOD) mood(0); } }, 250);
@@ -191,6 +192,7 @@
      ovoz tugagach xona avvalgi holatiga qaytadi. Yangi buyruq tez berilsa — klip boshidan boshlanadi. */
   var RADIO = { on: false, a: null };
   function radioStart(audio) {
+    if (CH.on && chiefFile('radio')) { var dur = audio && isFinite(audio.duration) ? audio.duration * 1000 : 6000; chiefPlay('radio', dur + 300); return; }
     if (!audio || !has('videos', 'rahbar_ratsiya.mp4')) return;
     if (RADIO.a && RADIO.a !== audio) RADIO.a.removeEventListener('ended', radioStop);
     RADIO.a = audio; RADIO.on = true;
@@ -234,6 +236,7 @@
   }
   // buyruqlar orasida ham rahbar vaqti-vaqti bilan qo'li bilan ko'rsatma beradi (qimirlab turadi)
   function idleGesture() {
+    if (CH.on) { if (!CH.busy && Math.random() < 0.5) chiefPlay('point'); return; }
     if (RADIO.on || document.hidden) return;
     var ph = window._m39 && _m39.state().phase; if (ph !== 'm1' && ph !== 'm2') return;
     var v = gestureVideo(); if (!v) return;
@@ -294,7 +297,7 @@
   }
   // fon ovozlari: telefon jiringlashi, klaviatura, uzoq ratsiya — juda past ovozda
   function actx() { if (LIVE.ctx) return LIVE.ctx; var A = window.AudioContext || window.webkitAudioContext; if (!A) return null; LIVE.ctx = new A(); return LIVE.ctx; }
-  function beep(f, t0, d, v, type) { var c = actx(); if (!c) return; var o = c.createOscillator(), g = c.createGain(); o.type = type || 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, c.currentTime + t0); g.gain.linearRampToValueAtTime(v, c.currentTime + t0 + 0.01); g.gain.setValueAtTime(v, c.currentTime + t0 + d - 0.02); g.gain.linearRampToValueAtTime(0, c.currentTime + t0 + d); o.connect(g); g.connect(c.destination); o.start(c.currentTime + t0); o.stop(c.currentTime + t0 + d + 0.05); }
+  function beep(f, t0, d, v, type) { var c = actx(); if (!c) return; var o = c.createOscillator(), g = c.createGain(); o.type = type || 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, c.currentTime + t0); g.gain.linearRampToValueAtTime(v, c.currentTime + t0 + 0.01); g.gain.setValueAtTime(v, c.currentTime + t0 + Math.max(0.012, d - 0.02)); g.gain.linearRampToValueAtTime(0, c.currentTime + t0 + d); o.connect(g); g.connect(c.destination); o.start(c.currentTime + t0); o.stop(c.currentTime + t0 + d + 0.05); }
   function ambient() {
     if (!window.AUD || AUD.muted || document.hidden) return; var c = actx(); if (!c) return; if (c.state === 'suspended') c.resume().catch(function () {});
     var r = Math.random(), k = MOOD === 'angry' ? 1.6 : MOOD === 'tense' ? 1.2 : 1;
@@ -305,12 +308,43 @@
   var _mood0 = mood;
   mood = function (panic) {
     var prev = MOOD; _mood0(panic);
-    if (MOOD === 'angry' && prev !== 'angry') { window.AUD && AUD.sfx('alarm', 0.8); feedNext(); }
+    if (MOOD === 'angry' && prev !== 'angry') { window.AUD && AUD.sfx('alarm', 0.8); feedNext(); if (CH.on) chiefPlay('turn'); }
     if (room) room.classList.toggle('alarm', MOOD === 'angry');
   };
 
+  /* ---------- BOSHLIQ — ALOHIDA QATLAM (kliplar mavjud bo'lsa) ----------
+     videos/chief_plate.jpg  — boshliqsiz xona (xona rasmi bilan bir xil kadr)
+     videos/chief_<holat>.webm — shaffof fonli (alpha) kliplar: idle (doimiy), radio, point, nod, slam, turn
+     Fayllar bo'lmasa — eski usul (rasm ichidagi boshliq + ratsiya klipi) ishlayveradi. */
+  var CH = { on: false, cur: null, v: null, box: [0, 0, 2752, 1536], busy: false };
+  function chiefFile(n) { var f = 'chief_' + n + '.webm'; return has('videos', f) ? 'videos/' + f : null; }
+  function chiefInit() {
+    if (CH.on || !has('videos', 'chief_plate.jpg') || !chiefFile('idle')) return;
+    CH.on = true; room.classList.add('chiefL');
+    var pl = document.createElement('div'); pl.className = 'chPlate'; pl.style.backgroundImage = 'url("videos/chief_plate.jpg")';
+    pl.style.clipPath = fg.style.clipPath; room.appendChild(pl);
+    var host = document.createElement('div'); host.className = 'chief';
+    host.style.left = CH.box[0] + 'px'; host.style.top = CH.box[1] + 'px'; host.style.width = CH.box[2] + 'px'; host.style.height = CH.box[3] + 'px';
+    var v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; host.appendChild(v); room.appendChild(host); CH.v = v;
+    v.onended = function () { CH.busy = false; chiefPlay('idle'); };
+    chiefPlay('idle');
+  }
+  function chiefPlay(n, loopFor) {
+    if (!CH.on) return false; var f = chiefFile(n); if (!f) return false;
+    var v = CH.v; CH.cur = n; CH.busy = n !== 'idle';
+    v.loop = n === 'idle' || !!loopFor; v.src = f; v.currentTime = 0; v.play().catch(function () {});
+    if (loopFor) { clearTimeout(CH.t); CH.t = setTimeout(function () { CH.busy = false; chiefPlay('idle'); }, loopFor); }
+    return true;
+  }
+  // qaror natijasiga reaksiya: to'g'ri — bosh irg'aydi, xato — stolga uradi, halokatli/vaqt tugadi — o'girilib qaraydi
+  function react(k) {
+    if (!CH.on) return;
+    var n = k === 'opt' ? 'nod' : k === 'crit' || k === 'timeout' ? 'turn' : k === 'err' || k === 'fail' ? 'slam' : k === 'alt' ? 'point' : null;
+    if (n) setTimeout(function () { chiefPlay(n); }, 400);
+  }
+
   window.ROOM = {
-    cfg: CFG, loc: loc, general: general, mood: mood, open3d: open3d,
+    cfg: CFG, react: react, chief: function (n, ms) { return chiefPlay(n, ms); }, loc: loc, general: general, mood: mood, open3d: open3d,
     enter: function () { var vo = $('vidOv'); if (vo.parentNode !== S.main) S.main.appendChild(vo); },
     leave: function () { var vo = $('vidOv'); if (vo.parentNode !== document.body) document.body.appendChild(vo); },
     // қарор натижаси: шу локациянинг «энг сўнгги ҳолати» янгиланади
