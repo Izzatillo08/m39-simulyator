@@ -340,7 +340,8 @@
   function react(k) {
     if (!CH.on) return;
     var n = k === 'opt' ? 'nod' : k === 'crit' || k === 'timeout' ? 'turn' : k === 'err' || k === 'fail' ? 'slam' : k === 'alt' ? 'point' : null;
-    if (n) setTimeout(function () { chiefPlay(n); }, 400);
+    var alt = { slam: 'turn', nod: null, point: 'point', turn: 'turn' };
+    if (n) setTimeout(function () { if (!chiefPlay(n) && alt[n]) chiefPlay(alt[n]); }, 400);
   }
 
   window.ROOM = {
