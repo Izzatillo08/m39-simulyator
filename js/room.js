@@ -91,7 +91,7 @@
     general();
     fit(); window.addEventListener('resize', fit); if (window.ResizeObserver) new ResizeObserver(fit).observe(stage);
     setInterval(camCycle, 7000); camCycle(); hookAudio();
-    setInterval(idleGesture, 18000);
+    setInterval(idleGesture, 12000);
     liveBuild();
     var cw8 = 0, cwT = setInterval(function () { chiefInit(); if (CH.on || ++cw8 > 40) clearInterval(cwT); }, 300);
     if (window.S3D && S3D.lite) S3D.lite(true);   // 3D boshidan yengil rejimda (devordagi kichik ekran)
@@ -236,7 +236,7 @@
   }
   // buyruqlar orasida ham rahbar vaqti-vaqti bilan qo'li bilan ko'rsatma beradi (qimirlab turadi)
   function idleGesture() {
-    if (CH.on) { if (!CH.busy && Math.random() < 0.5) chiefPlay('point'); return; }
+    if (CH.on) { if (!CH.busy) { var r = Math.random(); if (r < 0.75) chiefPlay('radio', 4500 + Math.random() * 3000); else chiefPlay('point'); } return; }
     if (RADIO.on || document.hidden) return;
     var ph = window._m39 && _m39.state().phase; if (ph !== 'm1' && ph !== 'm2') return;
     var v = gestureVideo(); if (!v) return;
@@ -339,7 +339,7 @@
   // qaror natijasiga reaksiya: to'g'ri — bosh irg'aydi, xato — stolga uradi, halokatli/vaqt tugadi — o'girilib qaraydi
   function react(k) {
     if (!CH.on) return;
-    var n = k === 'opt' ? 'nod' : k === 'crit' || k === 'timeout' ? 'turn' : k === 'err' || k === 'fail' ? 'slam' : k === 'alt' ? 'point' : null;
+    var n = k === 'opt' ? (Math.random() < 0.15 ? 'nod' : 'radio') : k === 'crit' || k === 'timeout' ? 'turn' : k === 'err' || k === 'fail' ? 'slam' : k === 'alt' ? 'radio' : null;
     var alt = { slam: 'turn', nod: null, point: 'point', turn: 'turn' };
     if (n) setTimeout(function () { if (!chiefPlay(n) && alt[n]) chiefPlay(alt[n]); }, 400);
   }
