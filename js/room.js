@@ -345,20 +345,46 @@
     room.appendChild(pl);
     var host = document.createElement('div'); host.className = 'chief';
     host.style.left = CH.box[0] + 'px'; host.style.top = CH.box[1] + 'px'; host.style.width = CH.box[2] + 'px'; host.style.height = CH.box[3] + 'px';
-    var v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; host.appendChild(v); room.appendChild(host); CH.v = v;
+    room.appendChild(host);
+    // ikki qatlam (A/B): yangi klip yashirin qatlamda tayyor bo'lgach ustma-ust silliq almashadi — uzilish va miltillash yo'q
+    CH.vs = [0, 1].map(function () { var v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.className = 'chv'; host.appendChild(v); return v; });
+    CH.front = 0; CH.url = {};
+    // kliplar oldindan xotiraga yuklanadi (almashishda tarmoq kutilmaydi)
+    ['idle', 'radio', 'point', 'turn', 'nod', 'slam'].forEach(function (n) {
+      var f = chiefFile(n); if (!f) return;
+      fetch(f).then(function (r) { return r.blob(); }).then(function (b) { CH.url[n] = URL.createObjectURL(b); }).catch(function () {});
+    });
+    CH.vs.forEach(function (v) {
+      v.addEventListener('timeupdate', function () {
+        // harakat klipi tugashiga 0,4 s qolganda — jim turishga silliq qaytish (ratsiya ovozi davomida emas)
+        if (v !== CH.vs[CH.front] || v.loop || CH.cur === 'idle' || CH.radioAudio || CH.leaving) return;
+        if (v.duration && v.duration - v.currentTime < 0.4) { CH.leaving = true; chiefPlay('idle'); }
+      });
+    });
     chiefPlay('idle');
   }
   function chiefPlay(n, loopFor) {
-    if (!CH.on) return false; var f = chiefFile(n); if (!f) return false;
+    if (!CH.on) return false; var f = CH.url[n] || chiefFile(n); if (!f) return false;
     if (CH.radioAudio && n !== 'radio') return false;
     clearTimeout(CH.t);
-    var v = CH.v; CH.cur = n; CH.busy = n !== 'idle';
-    v.onloadedmetadata = v.ontimeupdate = null;
-    v.playbackRate = 1;
-    v.loop = !!loopFor;
-    v.pause();
-    v.src = f;
-    if (n !== 'idle') v.play().catch(function () {});
+    if (n === 'idle' && CH.cur === 'idle') return true;
+    var back = CH.vs[1 - CH.front], front = CH.vs[CH.front], tok = (CH.tok || 0) + 1; CH.tok = tok;
+    CH.cur = n; CH.busy = n !== 'idle'; CH.leaving = false;
+    back.onloadedmetadata = back.ontimeupdate = null; back.playbackRate = 1;
+    back.loop = !!loopFor; back.style.transition = 'none'; back.style.opacity = '0';
+    CH.v = back;   // ratsiya sinxronizatsiyasi shu (kelayotgan) qatlam bilan ishlaydi
+    var swapped = false, swap = function () {
+      if (tok !== CH.tok || swapped) return; swapped = true;
+      back.removeEventListener('playing', swap); back.removeEventListener('loadeddata', swap);
+      back.style.transition = front.style.transition = 'opacity .35s ease';
+      back.style.zIndex = 2; front.style.zIndex = 1; back.style.opacity = '1';
+      setTimeout(function () { if (tok !== CH.tok) return; front.style.opacity = '0'; front.pause(); }, 360);
+      CH.front = 1 - CH.front;
+    };
+    back.addEventListener(n === 'idle' ? 'loadeddata' : 'playing', swap);
+    back.src = f;
+    if (n !== 'idle') back.play().catch(function () { swap(); });
+    else { try { back.currentTime = 0; } catch (e) { /* yuklanmoqda */ } }
     if (loopFor) CH.t = setTimeout(function () { chiefPlay('idle'); }, loopFor);
     return true;
   }
