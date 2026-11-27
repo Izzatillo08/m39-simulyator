@@ -183,3 +183,38 @@
 #certOv .scoreSimple .resultMistakes{text-align:left;max-width:620px}
 #certOv .scoreSimple ol{margin:8px 0 0;padding-left:24px}
 #certOv .scoreSimple li+li{margin-top:8px}
+/* ===== baholash shkalasi (natijadan keyingi ekran) ===== */
+#certOv .scale{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:18px;padding:24px;box-sizing:border-box;overflow:auto;background:radial-gradient(ellipse at center,#0d1630 0%,#05070c 70%)}
+#certOv .scCard{width:min(1100px,100%);background:#f7f2e9;color:#1d3c44;border-radius:18px;padding:28px 34px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);font-family:Inter,sans-serif}
+#certOv .scHead{display:flex;align-items:center;justify-content:space-between;gap:16px}
+#certOv .scBrand{display:flex;align-items:center;gap:12px}
+#certOv .scBrand i{width:42px;height:42px;border-radius:8px;background:#145c63;color:#f2c14e;display:grid;place-items:center;font:900 13px InterD,Inter;font-style:normal}
+#certOv .scBrand b{display:block;font:800 15px Inter;letter-spacing:.06em;color:#145c63}
+#certOv .scBrand small{display:block;font:500 12px Inter;color:#6b7c80}
+#certOv .scHead>span{display:flex;align-items:center;gap:10px;font:700 15px Inter;color:#e0673f}
+#certOv .scPh{width:40px;height:40px;border-radius:50%;object-fit:cover}
+#certOv .scCard h2{margin:18px 0 6px;font:900 clamp(22px,2.6vw,34px)/1.15 InterD,Inter;color:#1d3c44}
+#certOv .scCard h2 em{font-style:normal;color:#e0673f}
+#certOv .scTicks{display:flex;justify-content:space-between;margin-top:34px;font:700 12px Inter;color:#8a8a80;margin-bottom:6px}
+#certOv .scBars{position:relative;display:flex;gap:8px;height:clamp(110px,15vh,150px)}
+#certOv .scB{border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:0;padding:6px;transition:transform .3s}
+#certOv .scB b{font:900 clamp(26px,3vw,40px)/1 InterD,Inter}
+#certOv .scB span{font:800 clamp(12px,1.2vw,16px) Inter;margin-top:4px}
+#certOv .scB small{font:600 clamp(11px,1vw,14px) Inter;opacity:.85;margin-top:4px}
+#certOv .scB.s2{background:#ddd5c4;color:#6e6658}
+#certOv .scB.s3{background:#bfe0dd;color:#1d3c44}
+#certOv .scB.s4{background:#156b72;color:#fff}
+#certOv .scB.s5{background:#ee6b4a;color:#fff}
+#certOv .scB.me{outline:4px solid #1d3c44;outline-offset:3px;transform:translateY(-4px)}
+#certOv .scMark{position:absolute;top:-14px;bottom:-14px;width:0;transform:translateX(-50%);pointer-events:none}
+#certOv .scMark i{position:absolute;top:0;bottom:0;left:-1.5px;width:3px;background:#1d3c44;border-radius:2px}
+#certOv .scMark b{position:absolute;top:-30px;left:50%;transform:translateX(-50%);background:#1d3c44;color:#fff;font:900 14px Inter;padding:3px 10px;border-radius:20px;white-space:nowrap}
+#certOv .scLbl{margin:18px 0 6px;font:800 12px Inter;letter-spacing:.08em;color:#8a8a80;text-transform:uppercase}
+#certOv .scEq{display:flex;gap:8px}
+#certOv .scE{min-width:0;background:#fff;border:1px solid #e5ddcf;border-radius:10px;padding:10px 6px;text-align:center;font:800 clamp(11px,1.1vw,15px) Inter;color:#1d3c44}
+#certOv .scE.me{border:2px solid #1d3c44}
+#certOv .scMis{margin-top:16px;background:#fff;border:1px solid #e5ddcf;border-radius:10px;padding:12px 16px;font:500 14px/1.45 Inter;color:#2b3b3f}
+#certOv .scMis ol{margin:6px 0 0;padding-left:20px}
+#certOv .scFoot{display:flex;align-items:center;gap:8px;margin:16px 0 0;font:500 13px Inter;color:#55666a}
+#certOv .scFoot i{width:8px;height:8px;border-radius:50%;background:#ee6b4a;flex:none}
+#certOv .scale>.btn{flex:none;height:auto;padding:16px 36px;min-width:260px;font-size:18px}

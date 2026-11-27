@@ -1168,31 +1168,47 @@
     setTimeout(function () { ST.shot = has3D ? S3D.snapshot(960, 540) : null; scoreScreen(); }, 2200);
     void D;
   }
+  // 1) Natija (halqa) — avvalgidek
   function scoreScreen() {
     var R = results(), D = ST.m2, g = R.grade[0];
-    var mistakes = [], seen = {};
-    function add(id, title, detail) {
-      if (seen[id] || mistakes.length >= 2) return;
-      seen[id] = true;
-      mistakes.push('<li><strong>' + esc(T(title)) + '</strong><br>' + esc(T(detail)) + '</li>');
-    }
-    if (D.crit) add(D.crit.q.id, D.crit.q.title, D.crit.o.out);
-    D.log.slice().sort(function (a, b) { return D.pts[a.id] - D.pts[b.id]; }).forEach(function (entry) {
-      var note = entry.notes.find(function (item) { return /Тартиб бузилди|Кеч берилди|Муддат .* бузилди/.test(item); });
-      if (entry.k !== 'opt') add(entry.id, entry.title, entry.opt);
-      else if (note) add(entry.id, entry.title, note);
-    });
-    var photo = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(ST.photo || '')
-      ? '<img class="resultPhoto" src="' + esc(ST.photo) + '" alt="' + esc(T('Тингловчи сурати')) + '">' : '';
-    $('certOv').innerHTML = '<div class="score scoreSimple g' + g + '">' + photo +
-      '<strong>' + esc(ST.who) + '</strong>' +
-      '<div class="resultPoints">' + R.total + ' / 100 ' + T('балл') + '</div>' +
-      '<div class="lvl">' + g + ' — ' + T(R.grade[1]) + '</div>' +
-      (mistakes.length ? '<div class="resultMistakes"><strong>' + T('Асосий хатолар') + '</strong><ol>' + mistakes.join('') + '</ol></div>'
-        : '<p>' + T('Асосий хато аниқланмади') + '</p>') +
-      '<button class="btn" id="scNext">' + T('НАТИЖА ВАРАҚАСИ') + '</button></div>';
+    var cls = g >= 5 ? 'g5' : g === 4 ? 'g4' : g === 3 ? 'g3' : 'g2';
+    var why = D.crit ? D.crit.o.out : g >= 5 ? 'Вазият тўлиқ назоратга олинди, талофатларсиз.' : g === 4 ? 'Вазият назоратга олинди, айрим кечикишлар бўлди.' : g === 3 ? 'Вазият қисман назоратга олинди, жиддий кечикишлар бўлди.' : 'Вазият назоратдан чиқди.';
+    var C = 2 * Math.PI * 120, off = C * (1 - R.total / 100);
+    $('certOv').innerHTML = '<div class="score ' + cls + '"><small>' + T('МАШҒУЛОТ ЯКУНЛАНДИ') + ' • ' + esc(ST.who) + '</small>' +
+      '<div class="ring"><svg viewBox="0 0 280 280"><circle cx="140" cy="140" r="120" class="bg"/><circle cx="140" cy="140" r="120" class="fg" style="stroke-dasharray:' + C.toFixed(1) + ';stroke-dashoffset:' + C.toFixed(1) + '" data-off="' + off.toFixed(1) + '"/></svg>' +
+      '<div class="num"><b id="scNum">0</b><span>/ 100 ' + T('балл') + '</span></div></div>' +
+      '<div class="lvl">' + T(R.grade[1]).toUpperCase() + '</div><p>' + T(why) + '</p>' +
+      '<button class="btn" id="scNext">' + T('БАҲОЛАШ ШКАЛАСИ') + ' ▶</button></div>';
+    var fgc = $('certOv').querySelector('.ring .fg'); requestAnimationFrame(function () { fgc.style.strokeDashoffset = fgc.dataset.off; });
+    var n = 0, it = setInterval(function () { n = Math.min(R.total, n + Math.max(1, Math.ceil(R.total / 40))); $('scNum').textContent = n; if (n >= R.total) clearInterval(it); }, 30);
     sfx(g >= 4 && !D.crit ? 'success' : 'warn');
-    $('scNext').onclick = renderCert;
+    $('scNext').onclick = function () { clearInterval(it); scaleScreen(); };
+  }
+  // 2) Baholash shkalasi — qaysi bahoga necha ball kerak, tinglovchi qayerda turibdi
+  function scaleScreen() {
+    var R = results(), D = ST.m2, g = R.grade[0];
+    var B = [[2, 'Қониқарсиз', 0, 54, 'Вазият назоратдан чиқди'], [3, 'Қониқарли', 55, 70, 'Қисман назорат'], [4, 'Яхши', 71, 85, 'Назоратга олинди'], [5, 'Аъло', 86, 100, 'Тўлиқ назорат']];
+    var mistakes = [], seen = {};
+    function add(id, title, detail) { if (seen[id] || mistakes.length >= 2) return; seen[id] = true; mistakes.push('<li><b>' + esc(T(title)) + '</b> — ' + esc(T(detail)) + '</li>'); }
+    if (D.crit) add(D.crit.q.id, D.crit.q.title, D.crit.o.out);
+    D.log.slice().sort(function (a, b) { return D.pts[a.id] - D.pts[b.id]; }).forEach(function (en) {
+      var note = en.notes.find(function (x) { return /Тартиб бузилди|Кеч берилди|Муддат .* бузилди/.test(x); });
+      if (en.k !== 'opt') add(en.id, en.title, en.opt); else if (note) add(en.id, en.title, note);
+    });
+    var photo = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(ST.photo || '') ? '<img class="scPh" src="' + esc(ST.photo) + '" alt="">' : '';
+    var pos = Math.max(0, Math.min(100, R.total));
+    var bars = B.map(function (b) { var w = b[3] - b[2] + 1, me = b[0] === g; return '<div class="scB s' + b[0] + (me ? ' me' : '') + '" style="flex:' + w + '"><b>' + b[0] + '</b><span>' + T(b[1]) + '</span><small>' + b[2] + '–' + b[3] + ' ' + T('балл') + '</small></div>'; }).join('');
+    var eq = B.map(function (b) { var w = b[3] - b[2] + 1; return '<div class="scE' + (b[0] === g ? ' me' : '') + '" style="flex:' + w + '">' + T(b[4]) + '</div>'; }).join('');
+    $('certOv').innerHTML = '<div class="scale"><div class="scCard">' +
+      '<div class="scHead"><div class="scBrand"><i>М39</i><div><b>М-39 ' + T('ТАКТИК ТРЕНАЖЁР') + '</b><small>' + T('Тезкор штаб') + '</small></div></div><span>' + photo + esc(ST.who) + '</span></div>' +
+      '<h2>' + T('Баҳолаш шкаласи') + ': <em>' + T('нечта балл керак') + '</em></h2>' +
+      '<div class="scTicks"><span>0</span><span>100</span></div>' +
+      '<div class="scBars">' + bars + '<div class="scMark" style="left:' + pos + '%"><i></i><b>' + R.total + '</b></div></div>' +
+      '<div class="scLbl">' + T('Вазият ҳолати') + ' ≈</div><div class="scEq">' + eq + '</div>' +
+      (mistakes.length ? '<div class="scMis"><b>' + T('Асосий хатолар') + '</b><ol>' + mistakes.join('') + '</ol></div>' : '') +
+      '<p class="scFoot"><i></i>' + T('Умумий балл = қарорлар сифати (70%) + кетма-кетлик (30%). Критик хато бўлса — баҳо 2.') + '</p>' +
+      '</div><button class="btn" id="scNext2">' + T('НАТИЖА ВАРАҚАСИ') + ' ▶</button></div>';
+    $('scNext2').onclick = renderCert;
   }
   // Натижалар қайдномаси — халқаро тест ҳисоботи варағи услубида (ўз дизайнимиз, барча матнлар T() орқали)
   function formData(R) {
