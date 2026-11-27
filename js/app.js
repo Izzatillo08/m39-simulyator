@@ -1186,7 +1186,14 @@
       ? '<img class="resultPhoto" src="' + esc(ST.photo) + '" alt="' + esc(T('Тингловчи сурати')) + '">' : '';
     $('certOv').innerHTML = '<div class="score scoreSimple g' + g + '">' + photo +
       '<strong>' + esc(ST.who) + '</strong>' +
-      '<div class="resultPoints">' + R.total + ' / 100 ' + T('балл') + '</div>' +
+      (function () {   // ball halqasi: to'q iz, ball ulushicha qizil yoy, uchida nuqta, markazda raqam
+        var p = Math.max(0, Math.min(100, R.total)) / 100, r = 84, C = 2 * Math.PI * r, a = p * 2 * Math.PI;   // svg -90° burilgan: 0 — tepada
+        var dx = (100 + r * Math.cos(a)).toFixed(1), dy = (100 + r * Math.sin(a)).toFixed(1);
+        return '<div class="ptRing"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="' + r + '" class="trk"/>' +
+          '<circle cx="100" cy="100" r="' + r + '" class="arc" style="stroke-dasharray:' + (C * p).toFixed(1) + ' ' + C.toFixed(1) + '"/>' +
+          '<circle cx="' + dx + '" cy="' + dy + '" r="9" class="dot"/></svg>' +
+          '<div class="ptNum"><b>' + R.total + '</b><span>' + T('балл') + '</span></div></div>';
+      })() +
       '<div class="lvl">' + g + ' — ' + T(R.grade[1]) + '</div>' +
       (mistakes.length ? '<div class="resultMistakes"><strong>' + T('Асосий хатолар') + '</strong><ol>' + mistakes.join('') + '</ol></div>'
         : '<p>' + T('Асосий хато аниқланмади') + '</p>') +
