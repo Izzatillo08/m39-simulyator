@@ -349,6 +349,9 @@ svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-widt
 #vidOv.d3{background:transparent}#vidOv.d3 video,#vidOv.d3 #vidImg{visibility:hidden}
 /* lavha ustidagi joy nomi */
 #vidCap{position:absolute;left:28px;bottom:96px;z-index:2;padding:8px 14px 8px 12px;border-left:4px solid var(--r);background:rgba(4,7,12,.72);font:800 18px InterD,Inter;letter-spacing:.03em;color:#fff;opacity:0;transform:translateY(6px);transition:opacity .4s,transform .4s;pointer-events:none}
+#vidCap{max-width:min(740px,calc(100% - 56px));box-sizing:border-box}
+#introRetry{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%)}
+#introRetry[hidden]{display:none}
 #vidCap.on{opacity:1;transform:none}
 /* Vaziyatlar markazi bosilganda: xarita qimirlamaydi, shtab tasviri chiqadi */
 #hqImg{position:absolute;inset:0;z-index:4;display:none;background:#000 url("videos/intro_11.jpg") center/cover no-repeat}
@@ -732,7 +735,7 @@ html[data-theme=day] .risk.mid{color:var(--r)}
     <button class="btn" id="bStart">СИМУЛЯЦИЯНИ БОШЛАШ</button>
   </div>
 </div>
-<div id="vidOv" class="ov"><div id="vidImg"></div><div id="vidCap"></div><video id="vid" playsinline preload="auto"></video><div class="wait"><b>ВИДЕО КУТИЛМОҚДА</b><div class="bar"></div></div><button class="btn" id="vidSkip">Давом этиш</button></div>
+<div id="vidOv" class="ov"><div id="vidImg"></div><div id="vidCap"></div><video id="vid" playsinline preload="auto"></video><div class="wait"><b>ВИДЕО КУТИЛМОҚДА</b><div class="bar"></div></div><button class="btn" type="button" id="introRetry" hidden>Овозни қайта ижро этиш</button><button class="btn" id="vidSkip">Давом этиш</button></div>
 <div id="camBig" class="ov"><div class="row"><b id="camBigT"></b><button class="btn ghost" id="camBigX" style="flex:none">Ёпиш</button></div><div class="wrap" id="camBigW"></div></div>
 <div id="pauseOv" class="ov"><b>ПАУЗА</b></div>
 <div id="certOv" class="ov"></div>

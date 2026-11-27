@@ -265,20 +265,123 @@
     var who = $('who').value.trim();
     if (!who) { $('who').focus(); toast(T('ФИШ ва унвонни киритинг')); sfx('warn'); return; }
     try { localStorage.setItem('m39_who', who); } catch (e) { /* хусусий режим */ }
-    fresh(); ST.who = who; ST.t0 = Date.now();
+    var photo = ST.photo;
+    fresh(); ST.photo = photo; ST.who = who; ST.t0 = Date.now();
     S3('reset'); S3('clearMeans'); S3('highlightErrorZones', []); S3('sync3D', { alloc: ST.m1.alloc });
-    overlay('start', false); sfx('select'); window.AUD && AUD.ambientOn();
+    overlay('start', false); sfx('select');
     ST.phase = 'intro'; if (window.ROOM && ROOM.leave) ROOM.leave();   // intro doim to'liq ekranda (qayta boshlanganda ham)
-    // Кириш: ketma-ket lavhalar (video + harakatlanuvchi rasmlar) + штаб диктори овози + тирбандлик фони.
-    // Ketma-ketlik bo'lmasa — yagona intro.mp4; u ham bo'lmasa — «Видео кутилмоқда» (3D кино фонида) + диктор.
-    var caps = {}, cap = SC.INTRO.cap || {};
-    var seq = (SC.INTRO.seq || []).filter(function (f) { return /^3d:/.test(f) ? has3D : ASSETS.has('videos', f); }).map(function (f) {
-      var s = /^3d:/.test(f) ? f : 'videos/' + f; if (cap[f] && BA.byId(cap[f])) caps[s] = BA.byId(cap[f]).name; return s;
+    playIntro(function () { window.AUD && AUD.ambientOn(); openM1(); m1Skip(); });
+  }
+
+  var introPlayer = null;
+  function playIntro(done) {
+    var o = $('vidOv'), v = $('vid'), img = $('vidImg'), cap = $('vidCap');
+    var retry = $('introRetry'), cues = SC.INTRO.cues;
+    var voice = new Audio('audio/' + SC.INTRO.voice + '?v=speakscribe');
+    var activeSrc = '', cueIndex = -1, failed = false, closed = false, attempt = 0;
+
+    function sync() {
+      if (closed || ST.paused || failed) return;
+      var time = voice.currentTime;
+      var index = cues.length - 1;
+      while (index > 0 && time < cues[index][0]) index--;
+      if (index === cueIndex) return;
+      cueIndex = index;
+      var cue = cues[index], src = 'videos/' + cue[1];
+      cap.textContent = T(cue[2]);
+      cap.classList.add('on');
+      if (src === activeSrc) return;
+      activeSrc = src;
+      var still = isImg(src);
+      o.classList.toggle('img', still);
+      if (still) {
+        v.pause();
+        v.removeAttribute('src');
+        v.load();
+        img.className = 'on';
+        img.style.backgroundImage = 'url("' + src + '")';
+      } else {
+        img.className = '';
+        v.onloadedmetadata = function () {
+          if (closed || activeSrc !== src || !Number.isFinite(v.duration)) return;
+          var span = cues[index + 1][0] - cue[0];
+          v.playbackRate = v.duration / span;
+          v.currentTime = Math.min(v.duration, Math.max(0, (voice.currentTime - cue[0]) * v.playbackRate));
+        };
+        v.src = src;
+        v.muted = true;
+        v.play().catch(function () {});
+      }
+    }
+
+    function fail() {
+      if (closed) return;
+      failed = true;
+      v.pause();
+      retry.hidden = false;
+    }
+
+    function resume() {
+      if (closed || ST.paused || failed) return;
+      var id = ++attempt;
+      voice.play().catch(function () {
+        if (id === attempt && !ST.paused) fail();
+      });
+    }
+
+    function pause() {
+      ++attempt;
+      voice.pause();
+      v.pause();
+    }
+
+    function end() {
+      if (closed) return;
+      closed = true;
+      pause();
+      voice.removeAttribute('src');
+      voice.load();
+      v.onloadedmetadata = null;
+      v.playbackRate = 1;
+      v.removeAttribute('src');
+      v.load();
+      img.className = '';
+      img.style.backgroundImage = '';
+      cap.classList.remove('on');
+      cap.textContent = '';
+      retry.hidden = true;
+      retry.onclick = null;
+      $('vidSkip').onclick = null;
+      o.classList.remove('img');
+      overlay('vidOv', false);
+      introPlayer = null;
+      done();
+    }
+
+    introPlayer = { pause: pause, resume: resume, mute: function () { voice.muted = !!(window.AUD && AUD.muted); } };
+    introPlayer.mute();
+    voice.addEventListener('timeupdate', sync);
+    voice.addEventListener('waiting', function () { v.pause(); });
+    voice.addEventListener('playing', function () {
+      if (ST.paused || closed || failed) return;
+      sync();
+      if (v.getAttribute('src') && !v.ended) v.play().catch(function () {});
     });
-    if (!seq.length && ASSETS.has('videos', SC.INTRO.video)) seq = ['videos/' + SC.INTRO.video];
-    window.AUD && AUD.intro(true);
-    playMedia(seq.length ? seq : null, function () { window.AUD && AUD.intro(false); openM1(); m1Skip(); },   // 3-версия: 1-модул йўқ — me'yoriy taqsimot avtomatik, darhol 2-modul
-      { voice: { kind: 'audio', file: SC.INTRO.voice || 'intro.mp3' }, imgDur: SC.INTRO.imgDur || 5, d3Dur: SC.INTRO.d3Dur || 7, caps: caps, stopVoice: true, untilVoice: true });
+    voice.addEventListener('error', fail);
+    voice.addEventListener('ended', end);
+    retry.onclick = function () {
+      failed = false;
+      retry.hidden = true;
+      if (voice.error) voice.load();
+      resume();
+    };
+    $('vidSkip').onclick = end;
+    retry.textContent = T('Овозни қайта ижро этиш');
+    retry.hidden = true;
+    overlay('vidOv', true);
+    sync();
+    resume();
+    $('vidSkip').focus();
   }
   // Тўлиқ экран медиа. src — битта файл ёки рўйхат: .mp4 — видео, .jpg/.png/.webp — секин яқинлашувчи/узоқлашувчи расм.
   // opt.voice — бирга эшитиладиган овоз ({kind, file}); видеонинг ўз овози шунда пастроқ (фон) бўлади.
@@ -341,7 +444,7 @@
         }); });
       } else if (isImg(s)) {
         leave3d(); o.classList.add('img'); o.classList.remove('wait'); v.pause(); v.removeAttribute('src');
-        var d = opt.imgDur || 6; img.className = ''; img.style.backgroundImage = 'url("' + s + '")'; img.style.animationDuration = d + 's';
+        var d = (opt.timings || {})[s] || opt.imgDur || 6; img.className = ''; img.style.backgroundImage = 'url("' + s + '")'; img.style.animationDuration = d + 's';
         void img.offsetWidth; img.className = 'on k' + (i % 3);
         tm = setTimeout(next, d * 1000);
       } else {
@@ -822,7 +925,6 @@
       notes.push(['warn', 'Критик хато (' + D.critN + ' / ' + (LIVES + 1) + ') — оғир оқибатлар. ' + (LIVES + 1) + '-критик хатода машғулот якунланади']);
       sfx('alarm', 1.5);
     }
-    if (window.ROOM && ROOM.react) ROOM.react(k);
     if (k === 'crit') {
       D.res[q.id] = 'crit'; D.pts[q.id] = 0; D.crit = { q: q, o: o }; logIt(q, o, k, notes);
       var cv = resVideo(q.n, false); if (cv && window.ROOM) ROOM.result(q.fxLoc || q.loc, cv); return cv ? playMedia(cv, function () { critical(q, o); }) : critical(q, o);
@@ -1066,21 +1168,31 @@
     setTimeout(function () { ST.shot = has3D ? S3D.snapshot(960, 540) : null; scoreScreen(); }, 2200);
     void D;
   }
-  // 2-версия: avval katta ball ekrani (doira + baho + qisqa xulosa), so'ng «Natija varaqasi» tugmasi bilan qaydnoma
   function scoreScreen() {
     var R = results(), D = ST.m2, g = R.grade[0];
-    var cls = g >= 5 ? 'g5' : g === 4 ? 'g4' : g === 3 ? 'g3' : 'g2';
-    var why = D.crit ? D.crit.o.out : g >= 5 ? 'Вазият тўлиқ назоратга олинди, талофатларсиз.' : g === 4 ? 'Вазият назоратга олинди, айрим кечикишлар бўлди.' : g === 3 ? 'Вазият қисман назоратга олинди: кечикиш ва жабрланганлар бор.' : 'Йўл тўсилди, тўқнашувлар ва жароҳатлар юз берди.';
-    var C = 2 * Math.PI * 120, off = C * (1 - R.total / 100);
-    $('certOv').innerHTML = '<div class="score ' + cls + '"><small>' + T('МАШҒУЛОТ ЯКУНЛАНДИ') + ' • ' + esc(ST.who) + '</small>' +
-      '<div class="ring"><svg viewBox="0 0 280 280"><circle cx="140" cy="140" r="120" class="bg"/><circle cx="140" cy="140" r="120" class="fg" style="stroke-dasharray:' + C.toFixed(1) + ';stroke-dashoffset:' + C.toFixed(1) + '" data-off="' + off.toFixed(1) + '"/></svg>' +
-      '<div class="num"><b id="scNum">0</b><span>/ 100 ' + T('балл') + '</span></div></div>' +
-      '<div class="lvl">' + T(R.grade[1]).toUpperCase() + '</div><p>' + T(why) + '</p>' +
-      '<button class="btn" id="scNext">' + T('НАТИЖА ВАРАҚАСИ') + ' ▶</button></div>';
-    var fgc = $('certOv').querySelector('.ring .fg'); requestAnimationFrame(function () { fgc.style.strokeDashoffset = fgc.dataset.off; });
-    var n = 0, it = setInterval(function () { n = Math.min(R.total, n + Math.max(1, Math.ceil(R.total / 40))); $('scNum').textContent = n; if (n >= R.total) clearInterval(it); }, 30);
+    var mistakes = [], seen = {};
+    function add(id, title, detail) {
+      if (seen[id] || mistakes.length >= 2) return;
+      seen[id] = true;
+      mistakes.push('<li><strong>' + esc(T(title)) + '</strong><br>' + esc(T(detail)) + '</li>');
+    }
+    if (D.crit) add(D.crit.q.id, D.crit.q.title, D.crit.o.out);
+    D.log.slice().sort(function (a, b) { return D.pts[a.id] - D.pts[b.id]; }).forEach(function (entry) {
+      var note = entry.notes.find(function (item) { return /Тартиб бузилди|Кеч берилди|Муддат .* бузилди/.test(item); });
+      if (entry.k !== 'opt') add(entry.id, entry.title, entry.opt);
+      else if (note) add(entry.id, entry.title, note);
+    });
+    var photo = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(ST.photo || '')
+      ? '<img class="resultPhoto" src="' + esc(ST.photo) + '" alt="' + esc(T('Тингловчи сурати')) + '">' : '';
+    $('certOv').innerHTML = '<div class="score scoreSimple g' + g + '">' + photo +
+      '<strong>' + esc(ST.who) + '</strong>' +
+      '<div class="resultPoints">' + R.total + ' / 100 ' + T('балл') + '</div>' +
+      '<div class="lvl">' + g + ' — ' + T(R.grade[1]) + '</div>' +
+      (mistakes.length ? '<div class="resultMistakes"><strong>' + T('Асосий хатолар') + '</strong><ol>' + mistakes.join('') + '</ol></div>'
+        : '<p>' + T('Асосий хато аниқланмади') + '</p>') +
+      '<button class="btn" id="scNext">' + T('НАТИЖА ВАРАҚАСИ') + '</button></div>';
     sfx(g >= 4 && !D.crit ? 'success' : 'warn');
-    $('scNext').onclick = function () { clearInterval(it); renderCert(); };
+    $('scNext').onclick = renderCert;
   }
   // Натижалар қайдномаси — халқаро тест ҳисоботи варағи услубида (ўз дизайнимиз, барча матнлар T() орқали)
   function formData(R) {
@@ -1180,13 +1292,24 @@
     if (ST.phase === 'start' || ST.paused === on) return;
     ST.paused = on; overlay('pauseOv', on); S3('setPaused', on);
     $('bPause').querySelector('.pa').classList.toggle('hide', on); $('bPause').querySelector('.pl').classList.toggle('hide', !on);
+    if (introPlayer) {
+      if (on) {
+        ST.pauseAt = Date.now();
+        window.AUD && AUD.ambientOff();
+        introPlayer.pause();
+      } else {
+        ST.pauseMs += Date.now() - ST.pauseAt;
+        introPlayer.resume();
+      }
+      return;
+    }
     if (on) { ST.pauseAt = Date.now(); window.AUD && AUD.ambientOff(); var v = $('vid'); if (!v.paused) v.pause(); }
     else { ST.pauseMs += Date.now() - ST.pauseAt; window.AUD && AUD.ambientOn(); if ($('vidOv').classList.contains('on') && $('vid').src) $('vid').play().catch(function () {}); }
   }
   function updSnd() { var m = window.AUD && AUD.muted; $('bSnd').querySelector('.wv').classList.toggle('hide', m); $('bSnd').querySelector('.mu').classList.toggle('hide', !m); $('bAmb').classList.toggle('off', !(window.AUD && AUD.ambient)); }
   $('bPause').onclick = function () { setPause(!ST.paused); };
   $('pauseOv').onclick = function () { setPause(false); };
-  $('bSnd').onclick = function () { AUD.toggle(); updSnd(); };
+  $('bSnd').onclick = function () { AUD.toggle(); if (introPlayer) { introPlayer.mute(); $('vid').muted = true; } updSnd(); };
   $('bAmb').onclick = function () { AUD.toggleAmbient(); updSnd(); };
   $('bLang').onclick = function () { I18N.toggle(); };
   // мавзу: стандарт (тонгги туман) → кундузги → тунги; 3D ёруғлик ҳам мос равишда ўзгаради
